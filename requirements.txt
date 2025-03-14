@@ -4,3 +4,4 @@ pybase64
 plotly
 datetime 
 openpyxl
+requests

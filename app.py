@@ -79,10 +79,16 @@ sidebar.title("Bourbon Chasers")
 def load_weekly_data():
     url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx"
     try:
-        return pd.read_excel(url, engine="openpyxl")
+        response = requests.get(url)
+        response.raise_for_status()  # Raise error for bad responses (4xx, 5xx)
+        
+        # Read the Excel file from the response content
+        return pd.read_excel(BytesIO(response.content), engine="openpyxl")
+
     except Exception as e:
         st.warning(f"TieDye_Weekly_Scoreboard.xlsx not found. Please check the URL or upload it manually. Error: {e}")
         return None
+
 
 weekly_data = load_weekly_data()
 
