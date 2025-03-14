@@ -3,6 +3,7 @@ import pandas as pd
 import base64
 import plotly.express as px
 from datetime import datetime
+import openpyxl
 
 st.set_page_config(
     page_title="STRAVA_TRACKER",
