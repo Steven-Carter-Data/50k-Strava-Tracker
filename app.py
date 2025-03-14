@@ -77,9 +77,9 @@ sidebar.title("Bourbon Chasers")
 @st.cache_data(ttl=0)
 def load_weekly_data():
     try:
-        return pd.read_excel("TieDye_Weekly.xlsx")
+        return pd.read_excel("TieDye_Weekly_Scoreboard.xlsx")
     except:
-        st.warning("TieDye_Weekly.xlsx not found. Please upload it.")
+        st.warning("TieDye_Weekly_Scoreboard.xlsx not found. Please upload it.")
         return None
 
 weekly_data = load_weekly_data()
