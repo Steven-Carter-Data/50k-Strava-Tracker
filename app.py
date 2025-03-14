@@ -79,7 +79,7 @@ sidebar.title("Bourbon Chasers")
 # Load TieDye_Weekly.xlsx
 @st.cache_data(ttl=0)
 def load_weekly_data():
-    url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx"
+    url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx?raw=true"
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise error for bad responses (4xx, 5xx)
