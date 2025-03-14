@@ -15,7 +15,7 @@ def get_base64_image(image_path):
         return base64.b64encode(image_file.read()).decode()
 
 # Load and embed the background image
-background_image = "Untitled (7).png"
+background_image = "bg_smolder.png"
 base64_image = get_base64_image(background_image)
 
 st.markdown(
