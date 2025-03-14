@@ -76,10 +76,11 @@ sidebar.title("Bourbon Chasers")
 # Load TieDye_Weekly.xlsx
 @st.cache_data(ttl=0)
 def load_weekly_data():
+    url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx"
     try:
-        return pd.read_excel("TieDye_Weekly_Scoreboard.xlsx")
-    except:
-        st.warning("TieDye_Weekly_Scoreboard.xlsx not found. Please upload it.")
+        return pd.read_excel(url, engine="openpyxl")
+    except Exception as e:
+        st.warning(f"TieDye_Weekly_Scoreboard.xlsx not found. Please check the URL or upload it manually. Error: {e}")
         return None
 
 weekly_data = load_weekly_data()
