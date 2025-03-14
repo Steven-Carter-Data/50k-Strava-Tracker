@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime
 import openpyxl
 import requests
+from io import BytesIO
 
 st.set_page_config(
     page_title="STRAVA_TRACKER",
