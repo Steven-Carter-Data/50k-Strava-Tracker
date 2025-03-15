@@ -8,7 +8,7 @@ import requests
 from io import BytesIO
 
 st.set_page_config(
-    page_title="STRAVA_TRACKER",
+    page_title="Strava_Inferno 🔥",
     layout="wide"
 )
 
@@ -22,23 +22,20 @@ background_image = "bg_smolder.png"
 base64_image = get_base64_image(background_image)
 
 st.markdown(
-    f"""
+    """
     <style>
-    .stApp {{
+    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
+
+    .stApp {
         background: url('data:image/png;base64,{base64_image}') no-repeat center center fixed;
         background-size: cover;
-        background-position: center;
-        font-family: 'Garamond', 'Georgia', serif;
+        font-family: 'UnifrakturCook', serif;
         color: #D4AF37;
-    }}
-    h1, h2, h3, h4, h5, h6 {{
-        font-family: 'Old English Text MT', serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'UnifrakturCook', serif;
         color: #D4AF37;
-    }}
-    .stDataFrame {{
-        font-family: 'Garamond', 'Georgia', serif;
-        color: white;
-    }}
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -46,10 +43,14 @@ st.markdown(
 
 # Title header 
 st.markdown(
-    '<h1 style="text-align: center; font-family: Old English Text MT, serif; font-size: 85px; font-weight: bold; color: #D4AF37;">'
-    'Welcome to the Inferno</h1>',
+    """
+    <h1 style="text-align: center; font-family: 'UnifrakturCook', serif; font-size: 60px; font-weight: bold; color: #D4AF37; max-width: 90%; margin: auto; word-wrap: break-word;">
+    Welcome to the Inferno
+    </h1>
+    """,
     unsafe_allow_html=True
 )
+
 
 # Title Sub-header
 st.markdown(
