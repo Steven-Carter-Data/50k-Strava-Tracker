@@ -18,8 +18,12 @@ def get_base64_image(image_path):
         return base64.b64encode(image_file.read()).decode()
 
 # Load and embed the background image
-background_image = "C:\\Users\\sdcar\\OneDrive\\Documents\\2_Dev_Apps\\Tie_Dye_50k\\bg_smolder.png"  
-base64_image = get_base64_image(background_image)
+def get_base64_image_from_url(image_url):
+    response = requests.get(image_url)
+    return base64.b64encode(response.content).decode()
+
+image_url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/bg_smolder.png"
+base64_image = get_base64_image_from_url(image_url)
 
 st.markdown(
     """
