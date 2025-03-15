@@ -51,10 +51,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 # Title Sub-header
 st.markdown(
-    '<h3 style="text-align: center; font-family: Old English Text MT, serif; font-size: 25px; font-weight: bold; color: #D4AF37;">'
+    '<h3 style="text-align: center; font-family: UnifrakturCook, serif; font-size: 25px; font-weight: bold; color: #D4AF37;">'
     'Bourbon Chasers - The descent into madness has begun!</h3>',
     unsafe_allow_html=True
 )
