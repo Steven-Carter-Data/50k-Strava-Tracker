@@ -22,7 +22,7 @@ def get_base64_image_from_url(image_url):
     response = requests.get(image_url)
     return base64.b64encode(response.content).decode()
 
-image_url = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/bg_smolder.png"
+image_url = "https://raw.githubusercontent.com/Steven-Carter-Data/50k-Strava-Tracker/main/bg_smolder.png"
 base64_image = get_base64_image_from_url(image_url)
 
 st.markdown(
