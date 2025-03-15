@@ -31,6 +31,19 @@ def get_base64_image_from_url(image_url):
 image_url = "https://raw.githubusercontent.com/Steven-Carter-Data/50k-Strava-Tracker/main/bg_smolder.png"
 base64_image = get_base64_image_from_url(image_url)
 
+# Insert background image into Streamlit app
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background: url('data:image/png;base64,{base64_image}') no-repeat center center fixed;
+        background-size: cover;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown(
     """
     <style>
