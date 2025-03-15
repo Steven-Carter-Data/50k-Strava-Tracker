@@ -18,7 +18,7 @@ def get_base64_image(image_path):
         return base64.b64encode(image_file.read()).decode()
 
 # Load and embed the background image
-background_image = r"C:\Users\sdcar\OneDrive\Documents\2_Dev_Apps\Tie_Dye_50k\bg_smolder.png"  
+background_image = "C:\\Users\\sdcar\\OneDrive\\Documents\\2_Dev_Apps\\Tie_Dye_50k\\bg_smolder.png"  
 base64_image = get_base64_image(background_image)
 
 st.markdown(
