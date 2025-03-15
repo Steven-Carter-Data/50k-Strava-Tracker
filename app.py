@@ -20,7 +20,13 @@ def get_base64_image(image_path):
 # Load and embed the background image
 def get_base64_image_from_url(image_url):
     response = requests.get(image_url)
-    return base64.b64encode(response.content).decode()
+    if response.status_code == 200:
+        encoded_image = base64.b64encode(response.content).decode()
+        print(encoded_image[:100])  # Debugging: Print first 100 characters
+        return encoded_image
+    else:
+        print(f"Error: Unable to load image. HTTP Status Code: {response.status_code}")
+        return ""
 
 image_url = "https://raw.githubusercontent.com/Steven-Carter-Data/50k-Strava-Tracker/main/bg_smolder.png"
 base64_image = get_base64_image_from_url(image_url)
