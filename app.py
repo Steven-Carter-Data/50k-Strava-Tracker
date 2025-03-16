@@ -247,10 +247,10 @@ with tabs[0]:  # Leaderboards tab
             # Create a melted dataframe for grouped bar chart
             melted_data = combined_data.melt(id_vars=["Participant", "Formatted Pace"], 
                                             value_vars=["Total Distance", "Total Duration"], 
-                                            var_name="Metric", value_name="Value")
+                                            var_name="Metric", value_name="Total Miles")
 
             # Convert Total Duration to hours for better visualization
-            melted_data.loc[melted_data["Metric"] == "Total Duration", "Value"] = melted_data.loc[melted_data["Metric"] == "Total Duration", "Value"] / 60
+            melted_data.loc[melted_data["Metric"] == "Total Duration", "Total Miles"] = melted_data.loc[melted_data["Metric"] == "Total Duration", "Total Miles"] / 60
             melted_data.replace({"Total Distance": "Distance (miles)", "Total Duration": "Duration (hours)"}, inplace=True)
 
             # **Ensure Participant Order Matches Sorted Total Distance**
@@ -259,7 +259,7 @@ with tabs[0]:  # Leaderboards tab
             # Create Plotly grouped bar chart with dark theme
             fig = px.bar(
                 melted_data,
-                x="Value",
+                x="Total Miles",
                 y="Participant",
                 color="Metric",
                 orientation="h",
