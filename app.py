@@ -250,7 +250,7 @@ with tabs[0]:  # Leaderboards tab
                                             var_name="Metric", value_name="Total Miles")
 
             # Convert Total Duration to hours for better visualization
-            melted_data.loc[melted_data["Metric"] == "Total Duration", "Total Miles"] = melted_data.loc[melted_data["Metric"] == "Total Duration", "Total Miles"] / 60
+            melted_data.loc[melted_data["Metric"] == "Total Duration", "Value"] = melted_data.loc[melted_data["Metric"] == "Total Duration", "Value"] / 60
             melted_data.replace({"Total Distance": "Distance (miles)", "Total Duration": "Duration (hours)"}, inplace=True)
 
             # **Ensure Participant Order Matches Sorted Total Distance**
