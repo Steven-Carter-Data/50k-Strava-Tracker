@@ -130,9 +130,11 @@ if weekly_data is not None:
     # Sort data so the most recent date appears at the top
     weekly_data = weekly_data.sort_values(by="Date", ascending=False)
 
+    # Format Date as "Month Day" (e.g., March 15)
+    weekly_data["Date"] = weekly_data["Date"].dt.strftime("%B %d")
+
     st.header("Weekly Activity Data (Most Recent First)")
     st.dataframe(weekly_data, use_container_width=True)
-
 
 
 # Determine current week dynamically
