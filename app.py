@@ -40,13 +40,15 @@ st.markdown(
     f"""
     <style>
     .stApp {{
-        background: url('data:image/png;base64,{base64_image}') no-repeat center center fixed;
-        background-size: cover;
+        background: url('data:image/png;base64,{base64_image}') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-position: center !important;
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 st.markdown(
     """
