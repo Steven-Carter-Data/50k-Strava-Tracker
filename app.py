@@ -124,8 +124,19 @@ def load_weekly_data():
 weekly_data = load_weekly_data()
 
 # Ensure the Week column is numeric if it exists
-if weekly_data is not None and "Week" in weekly_data.columns:
-    weekly_data["Week"] = pd.to_numeric(weekly_data["Week"], errors='coerce')
+if weekly_data is not None:
+    # Ensure Date column is in datetime format
+    weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
+
+    # Find the most recent date in the dataset
+    most_recent_date = weekly_data["Date"].max()
+
+    # Filter the data to only show entries from the most recent date
+    filtered_weekly_data = weekly_data[weekly_data["Date"] == most_recent_date]
+
+    st.header("Weekly Activity Data (Most Recent Entry)")
+    st.dataframe(filtered_weekly_data, use_container_width=True)
+
 
 # Determine current week dynamically
 def get_current_week():
