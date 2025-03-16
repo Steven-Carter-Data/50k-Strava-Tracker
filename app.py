@@ -8,7 +8,7 @@ import requests
 from io import BytesIO
 
 st.set_page_config(
-    page_title="Strava_Inferno 🔥",
+    page_title="🔥 Bourbon Chasers Strava Inferno 🔥",
     layout="wide"
 )
 
