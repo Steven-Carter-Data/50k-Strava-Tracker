@@ -30,8 +30,8 @@ def get_base64_image_from_url(image_url):
 
 image_url = "https://raw.githubusercontent.com/Steven-Carter-Data/50k-Strava-Tracker/main/bg_smolder.png"
 
-# **Debugging Step: Show Image in Streamlit**
-st.image(image_url, caption="Test: Direct Image from URL")
+# # **Debugging Step: Show Image in Streamlit**
+# st.image(image_url, caption="Test: Direct Image from URL")
 
 base64_image = get_base64_image_from_url(image_url)
 
