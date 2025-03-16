@@ -123,15 +123,15 @@ def load_weekly_data():
 
 weekly_data = load_weekly_data()
 
-if weekly_data is not None:
-    # Ensure Date column is in datetime format
-    weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
+# if weekly_data is not None:
+#     # Ensure Date column is in datetime format
+#     weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
 
-    # Sort data so the most recent date appears at the top
-    weekly_data = weekly_data.sort_values(by="Date", ascending=False)
+#     # Sort data so the most recent date appears at the top
+#     weekly_data = weekly_data.sort_values(by="Date", ascending=False)
 
-    st.header("Weekly Activity Data (Most Recent First)")
-    st.dataframe(weekly_data, use_container_width=True)
+#     st.header("Weekly Activity Data (Most Recent First)")
+#     st.dataframe(weekly_data, use_container_width=True)
 
 # Determine current week dynamically
 def get_current_week():
