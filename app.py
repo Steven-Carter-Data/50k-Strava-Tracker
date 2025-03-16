@@ -23,11 +23,14 @@ base64_image = get_base64_image_from_url(image_url)
 
 st.markdown(f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
     .stApp {{
         background: url('data:image/png;base64,{base64_image}') no-repeat center center fixed;
         background-size: cover;
+        font-family: 'UnifrakturCook', serif;
+        color: #D4AF37;
     }}
-    h1, h3 {{
+    h1, h2, h3, h4, h5, h6 {{
         font-family: 'UnifrakturCook', serif;
         color: #D4AF37;
         text-align: center;
@@ -35,7 +38,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Title & Tabs (Placed at the Top) ---
+# --- Title & Tabs ---
 st.markdown("""
     <h1>Welcome to the Inferno</h1>
     <h3>Bourbon Chasers - The descent into madness has begun!</h3>
@@ -46,6 +49,22 @@ tabs = st.tabs(["Leaderboards", "Overview"])
 # --- Sidebar Setup ---
 sidebar = st.sidebar
 sidebar.title("Bourbon Chasers")
+
+# Load and embed the sidebar image
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+sidebar_image = "sidebar_img.png"
+try:
+    base64_sidebar_image = get_base64_image(sidebar_image)
+    sidebar.markdown(f"""
+        <div style="text-align: center;">
+            <img src='data:image/png;base64,{base64_sidebar_image}' style='max-width: 100%; border-radius: 10px;'>
+        </div>
+    """, unsafe_allow_html=True)
+except Exception as e:
+    sidebar.warning("Sidebar image not found.")
 
 @st.cache_data(ttl=0)
 def load_weekly_data():
@@ -97,6 +116,14 @@ with tabs[0]:
         
         leaderboard = calculate_leaderboard(filtered_data)
         st.dataframe(leaderboard, use_container_width=True)
+
+        # --- Running Visualization ---
+        if "Total Distance" in weekly_data.columns:
+            st.header("Top Runners by Distance")
+            distance_data = weekly_data.groupby("Participant")["Total Distance"].sum().reset_index()
+            distance_data = distance_data.sort_values(by="Total Distance", ascending=True)
+            fig = px.bar(distance_data, x="Total Distance", y="Participant", orientation="h", color_discrete_sequence=["#E25822"], template="plotly_dark")
+            st.plotly_chart(fig, use_container_width=True)
 
 # --- Overview Tab ---
 with tabs[1]:
