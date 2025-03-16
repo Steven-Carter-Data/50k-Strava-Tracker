@@ -165,6 +165,9 @@ with tabs[0]:  # Leaderboards tab
         # Format Date column to display only Month, Day, Year
         weekly_data["Date"] = pd.to_datetime(weekly_data["Date"]).dt.strftime("%B %d, %Y")
         
+        # Sort data so the most recent date appears at the top
+        weekly_data = weekly_data.sort_values(by="Date", ascending=False)
+        
         # Add participant filter in the sidebar
         participants = sorted(weekly_data["Participant"].unique())
         selected_participant = sidebar.selectbox("Select a Bourbon Chaser", ["All"] + participants)
