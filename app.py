@@ -280,43 +280,6 @@ with tabs[0]:  # Leaderboards tab
             # Display chart
             st.plotly_chart(fig, use_container_width=True)
 
-        # Cumulative Points Progression Chart
-        if weekly_data is not None:
-            st.header("🔥 Cumulative Points Progression 🔥")
-
-            # Calculate cumulative sum of points per participant
-            cumulative_data = weekly_data.groupby(["Participant", "Week"])["Total Points"].sum().reset_index()
-
-            # Ensure every participant starts at Week 1 with 0 points
-            min_week = cumulative_data["Week"].min()
-            participants = cumulative_data["Participant"].unique()
-            
-            # Create a DataFrame with zero points for each participant at the starting week
-            zero_point_entries = pd.DataFrame({
-                "Participant": participants,
-                "Week": min_week,
-                "Total Points": 0
-            })
-
-            # Append zero-point entries and recalculate cumulative sum
-            cumulative_data = pd.concat([zero_point_entries, cumulative_data])
-            cumulative_data["Cumulative Points"] = cumulative_data.groupby("Participant")["Total Points"].cumsum()
-
-            # Plotly line chart
-            fig_cumulative = px.line(
-                cumulative_data,
-                x="Week",
-                y="Cumulative Points",
-                color="Participant",
-                markers=True,
-                title="Cumulative Points Over Time",
-                labels={"Week": "Week Number", "Cumulative Points": "Total Points"},
-                template="plotly_dark"
-            )
-
-            # Display chart
-            st.plotly_chart(fig_cumulative, use_container_width=True)
-
     else:
         st.warning("No data available. Please upload TieDye_Weekly.xlsx.")
 
