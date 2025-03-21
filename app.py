@@ -283,7 +283,7 @@ with tabs[0]:  # Leaderboards tab
     else:
         st.warning("No data available. Please upload TieDye_Weekly.xlsx.")
 
-    st.header("Group Weekly Distance Progress")
+    st.header("Group Weekly Running Distance Progress")
 
     # Ensure the 'Week' and 'Total Distance' columns are numeric
     weekly_data["Week"] = pd.to_numeric(weekly_data["Week"], errors='coerce')
@@ -323,6 +323,35 @@ with tabs[0]:  # Leaderboards tab
         <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;'>
             <span style='color:#FFFFFF;font-size:22px;'>Week-over-Week Change:</span>
             <span style='color:{kpi_color};font-size:26px;font-weight:bold;'>{pct_change_latest:.1f}% {kpi_arrow}</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    st.header("Group Activity Level Progress by Week")
+
+    # Count total number of activities per week
+    weekly_activities = weekly_data.groupby("Week").size().reset_index(name="Num Activities").sort_values("Week")
+
+    weekly_activities["Pct Change"] = weekly_activities["Num Activities"].pct_change() * 100
+    weekly_activities["Pct Change"].fillna(0, inplace=True)  # Handle NaN for first week
+
+    # Display the latest week's percentage change in activities
+    latest_week_activity = weekly_activities.iloc[-1]
+    activities_pct_change_latest = latest_week_activity["Pct Change"]
+
+    # KPI formatting
+    activity_color = "#00FF00" if activities_pct_change_latest >= 0 else "#FF4136"
+    activity_arrow = "🔼" if activities_pct_change_latest >= 0 else "🔽"
+
+    st.markdown(
+        f"""
+        <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;margin-top:10px;'>
+            <span style='color:#FFFFFF;font-size:22px;'>Week-over-Week Activity Change:</span>
+            <span style='color:{activity_color};font-size:26px;font-weight:bold;'>
+                {activities_pct_change_latest:.1f}% {activity_arrow}
+            </span>
         </div>
         """,
         unsafe_allow_html=True
