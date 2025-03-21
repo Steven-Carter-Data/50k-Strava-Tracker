@@ -283,6 +283,52 @@ with tabs[0]:  # Leaderboards tab
     else:
         st.warning("No data available. Please upload TieDye_Weekly.xlsx.")
 
+    st.header("Group Weekly Distance Progress")
+
+    # Ensure the 'Week' and 'Total Distance' columns are numeric
+    weekly_data["Week"] = pd.to_numeric(weekly_data["Week"], errors='coerce')
+    weekly_data["Total Distance"] = pd.to_numeric(weekly_data["Total Distance"], errors='coerce')
+
+    # Filter running activities only
+    running_data = weekly_data[weekly_data["Workout Type"] == "Run"]
+
+    # Aggregate total weekly distance for the group
+    weekly_distance = running_data.groupby("Week")["Total Distance"].sum().reset_index()
+    weekly_distance = weekly_distance.sort_values("Week")
+
+    weekly_distance["Pct Change"] = weekly_distance["Total Distance"].pct_change() * 100
+    weekly_distance["Pct Change"].fillna(0, inplace=True)  # Handle NaN for first week
+
+    fig_weekly_miles = px.line(
+        weekly_distance,
+        x="Week",
+        y="Total Distance",
+        markers=True,
+        title="Total Miles Run by Week",
+        labels={"Total Distance": "Total Distance (Miles)", "Week": "Week"},
+        template="plotly_dark"
+    )
+    st.plotly_chart(fig_weekly_miles, use_container_width=True)
+
+    # Display the most recent week's percentage change
+    latest_week = weekly_distance.iloc[-1]
+    pct_change_latest = latest_week["Pct Change"]
+
+    # Format KPI
+    kpi_color = "#00FF00" if pct_change_latest >= 0 else "#FF4136"
+    kpi_arrow = "🔼" if pct_change_latest >= 0 else "🔽"
+
+    st.markdown(
+        f"""
+        <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;'>
+            <span style='color:#FFFFFF;font-size:22px;'>Week-over-Week Change:</span>
+            <span style='color:{kpi_color};font-size:26px;font-weight:bold;'>{pct_change_latest:.1f}% {kpi_arrow}</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 with tabs[1]:  # Overview tab
     st.header("Competition Overview")
 
