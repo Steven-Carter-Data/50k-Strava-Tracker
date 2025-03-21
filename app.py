@@ -284,7 +284,7 @@ with tabs[0]:  # Leaderboards tab
         st.warning("No data available. Please upload TieDye_Weekly.xlsx.")
 
     st.header("Group Weekly Running Distance Progress")
-    st.subheader("This shows the change in total running distance by week across the Bourbon Chaser group.")
+    st.subheader("The change in total running distance by week across the group.")
 
     # Ensure the 'Week' and 'Total Distance' columns are numeric
     weekly_data["Week"] = pd.to_numeric(weekly_data["Week"], errors='coerce')
@@ -331,7 +331,7 @@ with tabs[0]:  # Leaderboards tab
 
 
     st.header("Group Activity Level Progress by Week")
-    st.subheader("This shows the weekly increase or decrease in the number of activities across the Bourbon Chaser group.")
+    st.subheader("The weekly increase or decrease in the number of activities across the group.")
 
     # Count total number of activities per week
     weekly_activities = weekly_data.groupby("Week").size().reset_index(name="Num Activities").sort_values("Week")
