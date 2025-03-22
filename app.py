@@ -158,7 +158,7 @@ current_week = get_current_week()
 
 
 # Tabs for navigation
-tabs = st.tabs(["Leaderboards", "Overview"])
+tabs = st.tabs(["Leaderboards", "Overview", "Individual Analysis"])
 
 with tabs[0]:  # Leaderboards tab
     if weekly_data is not None:
@@ -392,4 +392,67 @@ with tabs[1]:  # Overview tab
         **The descent into madness has begun! 🔥**
         """
     )
+
+with tabs[2]:  # Individual Analysis Tab
+    st.header("Individual Performance Breakdown")
+
+    # Participant selection
+    participant_selected = st.selectbox(
+        "Select Participant", sorted(weekly_data["Participant"].unique())
+    )
+
+    # Filter data for the selected participant
+    individual_data = weekly_data[weekly_data["Participant"] == participant_selected]
+
+    # Calculate total training time for the participant
+    participant_total_time = individual_data["Total Duration"].sum()
+
+    # Calculate group average total training time
+    group_avg_total_time = weekly_data.groupby("Participant")["Total Duration"].sum().mean()
+
+    # Calculate participant vs group avg (%)
+    percent_of_group_avg = (participant_total_time / group_avg_total_time) * 100
+
+    # Display KPI for total training duration vs group average
+    kpi_color = "#00FF00" if percent_of_group_avg >= 100 else "#FF4136"
+    performance_arrow = "🔼" if percent_of_group_avg >= 100 else "🔽"
+
+    st.markdown(
+        f"""
+        <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;margin-top:10px;'>
+            <span style='color:#FFFFFF;font-size:22px;'>Your Total Training Time vs. Group Average:</span><br>
+            <span style='color:{kpi_color};font-size:28px;font-weight:bold;'>
+                {percent_of_group_avg:.1f}% {performance_arrow}
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Aggregate participant zone times
+    zone_columns = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"]
+    participant_zones = individual_data[zone_columns].sum()
+
+    # Calculate group average for zones
+    group_avg_zones = weekly_data.groupby("Participant")[zone_columns].sum().mean()
+
+    # Prepare DataFrame for comparison
+    zone_comparison_df = pd.DataFrame({
+        "Zone": zone_columns,
+        participant_selected: participant_zones.values,
+        "Group Average": group_avg_zones.values
+    })
+
+    # Plot bar chart
+    fig_zone_comparison = px.bar(
+        zone_comparison_df.melt(id_vars=["Zone"], var_name="Type", value_name="Minutes"),
+        x="Zone",
+        y="Minutes",
+        color="Type",
+        barmode="group",
+        template="plotly_dark",
+        title=f"{participant_selected}'s Time per Zone vs. Group Average"
+    )
+
+    st.plotly_chart(fig_zone_comparison, use_container_width=True)
 
