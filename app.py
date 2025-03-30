@@ -6,6 +6,7 @@ from datetime import datetime
 import openpyxl
 import requests
 from io import BytesIO
+from datetime import timedelta
 
 st.set_page_config(
     page_title="🔥 Bourbon Chasers Strava Inferno 🔥",
@@ -266,19 +267,58 @@ with tabs[0]:  # Leaderboards tab
         template="plotly_dark"
     )
     st.plotly_chart(fig_weekly_miles, use_container_width=True)
-    latest_week = weekly_distance.iloc[-1]
-    pct_change_latest = latest_week["Pct Change"]
+
+    # Ensure the Date column is in datetime format for running_data
+    running_data["Date"] = pd.to_datetime(running_data["Date"])
+
+    # Get today's date
+    today_date = datetime.today().date()
+
+    # Recalculate competition start date (same logic as get_current_week)
+    current_year = today_date.year
+    start_date = datetime(current_year, 3, 10).date()
+    if today_date < start_date:
+        start_date = datetime(current_year - 1, 3, 10).date()
+
+    # Calculate the start date of the current competition week
+    current_week_start = start_date + timedelta(weeks=current_week - 1)
+
+    # Determine the same offset as today within the current week
+    offset = today_date - current_week_start
+
+    # Calculate the start and end of the corresponding period in the previous week
+    prev_week_start = current_week_start - timedelta(weeks=1)
+    prev_week_end = prev_week_start + offset
+
+    # Sum the running distances from the current week up to today and for the previous week up to the same weekday
+    current_week_distance = running_data[
+        (running_data["Date"].dt.date >= current_week_start) & (running_data["Date"].dt.date <= today_date)
+    ]["Total Distance"].sum()
+
+    prev_week_distance = running_data[
+        (running_data["Date"].dt.date >= prev_week_start) & (running_data["Date"].dt.date <= prev_week_end)
+    ]["Total Distance"].sum()
+
+    # Calculate the week-to-date percentage change
+    if prev_week_distance > 0:
+        pct_change_latest = ((current_week_distance - prev_week_distance) / prev_week_distance) * 100
+    else:
+        pct_change_latest = 0
+
+    # Format KPI display
     kpi_color = "#00FF00" if pct_change_latest >= 0 else "#FF4136"
     kpi_arrow = "🔼" if pct_change_latest >= 0 else "🔽"
+
     st.markdown(
         f"""
         <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;'>
-            <span style='color:#FFFFFF;font-size:22px;'>Week-over-Week Change:</span>
+            <span style='color:#FFFFFF;font-size:22px;'>Week-to-Date Change:</span>
             <span style='color:{kpi_color};font-size:26px;font-weight:bold;'>{pct_change_latest:.1f}% {kpi_arrow}</span>
         </div>
         """,
         unsafe_allow_html=True
     )
+
     st.header("Group Activity Level Progress by Week")
     st.subheader("The weekly increase or decrease in the number of activities across the group.")
     weekly_activities = weekly_data.groupby("Week").size().reset_index(name="Num Activities").sort_values("Week")
