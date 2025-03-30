@@ -321,19 +321,55 @@ with tabs[0]:  # Leaderboards tab
 
     st.header("Group Activity Level Progress by Week")
     st.subheader("The weekly increase or decrease in the number of activities across the group.")
-    weekly_activities = weekly_data.groupby("Week").size().reset_index(name="Num Activities").sort_values("Week")
-    weekly_activities["Pct Change"] = weekly_activities["Num Activities"].pct_change() * 100
-    weekly_activities["Pct Change"].fillna(0, inplace=True)
-    latest_week_activity = weekly_activities.iloc[-1]
-    activities_pct_change_latest = latest_week_activity["Pct Change"]
-    activity_color = "#00FF00" if activities_pct_change_latest >= 0 else "#FF4136"
-    activity_arrow = "🔼" if activities_pct_change_latest >= 0 else "🔽"
+    
+    # Ensure the Date column is in datetime format for weekly_data
+    weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
+
+    # Get today's date
+    today_date = datetime.today().date()
+
+    # Calculate competition start date (using same logic as get_current_week)
+    current_year = today_date.year
+    start_date = datetime(current_year, 3, 10).date()
+    if today_date < start_date:
+        start_date = datetime(current_year - 1, 3, 10).date()
+
+    # Calculate the start date of the current competition week
+    current_week_start = start_date + timedelta(weeks=current_week - 1)
+
+    # Determine the same offset as today within the current week
+    offset = today_date - current_week_start
+
+    # Define the same period for the previous week
+    prev_week_start = current_week_start - timedelta(weeks=1)
+    prev_week_end = prev_week_start + offset
+
+    # Count activities for the current week up to today
+    current_week_activity_count = weekly_data[
+        (weekly_data["Date"].dt.date >= current_week_start) & (weekly_data["Date"].dt.date <= today_date)
+    ].shape[0]
+
+    # Count activities for the previous week up to the same day offset
+    prev_week_activity_count = weekly_data[
+        (weekly_data["Date"].dt.date >= prev_week_start) & (weekly_data["Date"].dt.date <= prev_week_end)
+    ].shape[0]
+
+    # Calculate the week-to-date percentage change
+    if prev_week_activity_count > 0:
+        pct_change_activity = ((current_week_activity_count - prev_week_activity_count) / prev_week_activity_count) * 100
+    else:
+        pct_change_activity = 0
+
+    # Format KPI display
+    activity_color = "#00FF00" if pct_change_activity >= 0 else "#FF4136"
+    activity_arrow = "🔼" if pct_change_activity >= 0 else "🔽"
+
     st.markdown(
         f"""
         <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;margin-top:10px;'>
-            <span style='color:#FFFFFF;font-size:22px;'>Week-over-Week Activity Change:</span>
+            <span style='color:#FFFFFF;font-size:22px;'>Week-to-Date Activity Change:</span>
             <span style='color:{activity_color};font-size:26px;font-weight:bold;'>
-                {activities_pct_change_latest:.1f}% {activity_arrow}
+                {pct_change_activity:.1f}% {activity_arrow}
             </span>
         </div>
         """,
