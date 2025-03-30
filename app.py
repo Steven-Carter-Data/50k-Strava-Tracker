@@ -187,6 +187,16 @@ with tabs[0]:  # Leaderboards tab
                 )
             leaderboard = data.groupby("Participant")["Points"].sum().reset_index()
             leaderboard = leaderboard.sort_values(by="Points", ascending=False)
+
+            # Calculate "Points Behind" for each participant
+            max_points = leaderboard["Points"].max()
+            leaderboard["Points Behind"] = max_points - leaderboard["Points"]
+
+            # Insert "Points Behind" column immediately after "Points"
+            points_idx = leaderboard.columns.get_loc("Points")
+            points_behind = leaderboard.pop("Points Behind")
+            leaderboard.insert(points_idx + 1, "Points Behind", points_behind)
+
             for week in range(1, current_week + 1):
                 week_points = data[data["Week"] == week].groupby("Participant")["Points"].sum()
                 leaderboard[f"Week {week} Totals"] = leaderboard["Participant"].map(week_points).fillna(0)
