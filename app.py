@@ -319,8 +319,8 @@ with tabs[0]:  # Leaderboards tab
         unsafe_allow_html=True
     )
 
-    st.header("Group Activity Level Progress by Week")
-    st.subheader("The weekly increase or decrease in the number of activities across the group.")
+    st.header("Group Activity Level Progress by Week to Date")
+    st.subheader("The weekly increase or decrease in the number of activities across the group exactly a week ago.")
     
     # Ensure the Date column is in datetime format for weekly_data
     weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
