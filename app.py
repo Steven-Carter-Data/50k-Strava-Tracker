@@ -211,6 +211,19 @@ with tabs[0]:  # Leaderboards tab
         st.header("Strava Competition Leaderboard")
         st.dataframe(leaderboard, use_container_width=True)
 
+        # COMMENT WHAT THIS DOES
+        if current_week > 1:
+            prev_week_col = f"Week {current_week - 1} Totals"
+            current_week_col = f"Week {current_week} Totals"
+            if prev_week_col in leaderboard.columns and current_week_col in leaderboard.columns:
+                # Calculate points gained specifically in the current week
+                leaderboard['Latest Week Gain'] = leaderboard[current_week_col]
+                # Find the biggest mover based on this week's points
+                biggest_mover = leaderboard.loc[leaderboard['Latest Week Gain'].idxmax()]
+                st.subheader(f"🔥 Biggest Mover Week {current_week}: {biggest_mover['Participant']} ({biggest_mover['Latest Week Gain']:.0f} points)")
+            else:
+                st.info("Previous week data not available to calculate Biggest Mover.") # handles week 1 case
+
         # Visualization: Who has run the most distance
         if "Total Distance" in weekly_data.columns and "Workout Type" in weekly_data.columns and "Total Duration" in weekly_data.columns:
             st.header("Top Runners by Distance and Duration (Runs Only)")
