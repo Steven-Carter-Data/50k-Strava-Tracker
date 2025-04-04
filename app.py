@@ -189,6 +189,9 @@ with tabs[0]:  # Leaderboards tab
             leaderboard = data.groupby("Participant")["Points"].sum().reset_index()
             leaderboard = leaderboard.sort_values(by="Points", ascending=False)
 
+            leaderboard.reset_index(drop=True, inplace=True)
+            leaderboard.insert(0, 'Rank', leaderboard.index + 1)
+
             # Calculate "Points Behind" for each participant
             max_points = leaderboard["Points"].max()
             leaderboard["Points Behind"] = max_points - leaderboard["Points"]
