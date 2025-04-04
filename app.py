@@ -392,6 +392,34 @@ with tabs[0]:  # Leaderboards tab
         unsafe_allow_html=True
     )
 
+    current_week_points = weekly_data[
+        (weekly_data["Date"].dt.date >= current_week_start) & (weekly_data["Date"].dt.date <= today_date)
+    ]["Points"].sum() # Assuming Points column exists
+
+    prev_week_points = weekly_data[
+        (weekly_data["Date"].dt.date >= prev_week_start) & (weekly_data["Date"].dt.date <= prev_week_end)
+    ]["Points"].sum()
+
+    if prev_week_points > 0:
+        pct_change_points = ((current_week_points - prev_week_points) / prev_week_points) * 100
+    else:
+        pct_change_points = 0 # Avoid division by zero
+
+    points_kpi_color = "#00FF00" if pct_change_points >= 0 else "#FF4136"
+    points_kpi_arrow = "🔼" if pct_change_points >= 0 else "🔽"
+
+    st.markdown(
+        f"""
+        <div style='background-color:#333333;padding:15px;border-radius:8px;text-align:center;margin-top:10px;'>
+            <span style='color:#FFFFFF;font-size:22px;'>Week-to-Date Points Change:</span>
+            <span style='color:{points_kpi_color};font-size:26px;font-weight:bold;'>
+                {pct_change_points:.1f}% {points_kpi_arrow}
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 with tabs[1]:  # Overview tab
     st.header("Competition Overview")
     st.markdown(
