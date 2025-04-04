@@ -335,8 +335,10 @@ with tabs[0]:  # Leaderboards tab
         unsafe_allow_html=True
     )
 
-    st.header("Group Activity Level Progress by Week to Date")
-    st.subheader("The weekly increase or decrease in the number of activities across the group exactly a week ago.")
+    st.header("---------------")
+
+    #st.header("Group Activity Level Progress by Week to Date")
+    #st.subheader("The weekly increase or decrease in the number of activities across the group exactly a week ago.")
     
     # Ensure the Date column is in datetime format for weekly_data
     weekly_data["Date"] = pd.to_datetime(weekly_data["Date"])
@@ -420,6 +422,11 @@ with tabs[0]:  # Leaderboards tab
         unsafe_allow_html=True
     )
 
+    group_cum_points = weekly_data.groupby("Week")["Points"].sum().cumsum().reset_index()
+    fig_group_cum_points = px.line(group_cum_points, x="Week", y="Points", title="Group Cumulative Points Over Time", markers=True, template="plotly_dark")
+    st.plotly_chart(fig_group_cum_points, use_container_width=True)
+
+    
 with tabs[1]:  # Overview tab
     st.header("Competition Overview")
     st.markdown(
