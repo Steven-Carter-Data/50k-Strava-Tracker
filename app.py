@@ -499,3 +499,19 @@ with tabs[2]:  # Individual Analysis Tab
         title=f"{participant_selected}'s Time per Zone vs. Group Average"
     )
     st.plotly_chart(fig_zone_comparison, use_container_width=True)
+
+    st.subheader("Activity Breakdown")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        activity_counts = individual_data['Workout Type'].value_counts().reset_index()
+        activity_counts.columns = ['Workout Type', 'Count']
+        fig_act_count = px.pie(activity_counts, names='Workout Type', values='Count', title='Activity Count by Type', template="plotly_dark")
+        fig_act_count.update_traces(textposition='inside', textinfo='percent+label')
+        st.plotly_chart(fig_act_count, use_container_width=True)
+
+    with col2:
+        activity_duration = individual_data.groupby('Workout Type')['Total Duration'].sum().reset_index()
+        fig_act_dur = px.pie(activity_duration, names='Workout Type', values='Total Duration', title='Total Duration by Activity Type (minutes)', template="plotly_dark")
+        fig_act_dur.update_traces(textposition='inside', textinfo='percent+label')
+        st.plotly_chart(fig_act_dur, use_container_width=True)
