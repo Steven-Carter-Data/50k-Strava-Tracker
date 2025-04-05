@@ -168,36 +168,93 @@ def preprocess_data(df):
     return processed_df
 
 # --- Competition Date & Week Calculation ---
-# --- Competition Date & Week Calculation ---
-def get_current_week(start_date_dt):
+def get_current_competition_week(start_date_dt, total_weeks=8):
     """
-    Calculates the current competition week number (1-8) with weeks running Monday-Sunday.
-    Weeks start on Monday and end on Sunday.
+    Calculates the current competition week number (1-total_weeks).
+    Assumes competition starts on start_date_dt and weeks run Monday-Sunday.
+    Week 1 includes the start date and runs until the following Sunday.
+    Subsequent weeks run Monday-Sunday.
     """
     today = datetime.today().date()
-    
-    # Ensure start_date_dt is a date object
+
+    # Ensure start_date is a date object
     if isinstance(start_date_dt, datetime):
-        start_date_dt = start_date_dt.date()
-        
-    # If competition hasn't started yet
-    if today < start_date_dt:
+        start_date = start_date_dt.date()
+    else:
+        start_date = start_date_dt # Assume it's already a date object
+
+    # If today is before the official start date, default to showing Week 1
+    if today < start_date:
+        # print("DEBUG: Today is before the official start date.")
         return 1
-        
-    # Calculate days since start
-    days_since_start = (today - start_date_dt).days
-    
-    # Calculate week number (integer division gives complete weeks, add 1 for current week)
-    week_number = (days_since_start // 7) + 1
-    
-    # Ensure week is within competition bounds (1-8)
-    competition_duration_weeks = 8
-    return min(max(week_number, 1), competition_duration_weeks)
+
+    # Find the Monday of the week *containing* the start date
+    start_weekday = start_date.weekday() # Monday is 0, Sunday is 6
+    monday_of_start_week = start_date - timedelta(days=start_weekday)
+
+    # Find the Monday of the week *containing* today's date
+    today_weekday = today.weekday()
+    monday_of_current_week = today - timedelta(days=today_weekday)
+
+    # Calculate the difference in weeks between the Monday of the current week
+    # and the Monday of the start week.
+    # Example:
+    # Start = Sun Mar 10. monday_of_start_week = Mon Mar 4.
+    # Today = Mon Mar 11. monday_of_current_week = Mon Mar 11.
+    # diff_days = (Mar 11 - Mar 4).days = 7. week_num = (7 // 7) + 1 = 2? No, this is Week 1.
+    # Today = Sun Mar 10. monday_of_current_week = Mon Mar 4.
+    # diff_days = (Mar 4 - Mar 4).days = 0. week_num = (0 // 7) + 1 = 1. Correct.
+    # Today = Sun Mar 17. monday_of_current_week = Mon Mar 11.
+    # diff_days = (Mar 11 - Mar 4).days = 7. week_num = (7 // 7) + 1 = 2? No, this is Week 1.
+    # Today = Mon Mar 18. monday_of_current_week = Mon Mar 18.
+    # diff_days = (Mar 18 - Mar 4).days = 14. week_num = (14 // 7) + 1 = 3? No, this is Week 2.
+
+    # Let's adjust the anchor point. Week 1 effectively *starts* for calculation purposes
+    # on the Monday of the week the competition begins.
+    # The calculation `(days // 7) + 1` works if the reference point is the start of Week 1.
+
+    # Recalculate based on days since the *actual start date*
+    days_since_actual_start = (today - start_date).days
+
+    # Determine the week number based on the Monday-Sunday structure
+    # Find the date of the first Monday *on or after* the start date
+    if start_weekday == 0: # Start date is a Monday
+        first_monday_ref = start_date
+    else: # Start date is not a Monday, find the *next* Monday
+        first_monday_ref = start_date + timedelta(days = (7 - start_weekday))
+
+    # If today is before the first Monday but on or after start_date, it's Week 1
+    if start_date <= today < first_monday_ref:
+        current_week_number = 1
+    else:
+        # If today is on or after the first Monday reference point
+        days_since_first_monday = (today - first_monday_ref).days
+        # Week calculation: Days 0-6 = Week 1 relative to first_monday_ref
+        # This corresponds to Competition Week 2 overall.
+        # So, week number = (days_since_first_monday // 7) + 2
+        # Let's rethink:
+        # If today = Sun Mar 10 -> week 1
+        # If today = Mon Mar 11 -> week 1
+        # If today = Sun Mar 17 -> week 1
+        # If today = Mon Mar 18 -> week 2
+        # If today = Mon Apr 8 -> week 5
+
+        # Use the Monday of the *current* week and the Monday of the *start* week.
+        diff_in_days = (monday_of_current_week - monday_of_start_week).days
+        current_week_number = (diff_in_days // 7) + 1
+
+
+    # Clamp the week number between 1 and the total duration
+    final_week_number = min(max(current_week_number, 1), total_weeks)
+    # print(f"DEBUG: Start={start_date}, Today={today}, StartMon={monday_of_start_week}, TodayMon={monday_of_current_week}, DiffDays={diff_in_days}, CalcWeek={current_week_number}, FinalWeek={final_week_number}")
+    return final_week_number
+
 
 # Define the competition start date (adjust if necessary)
 competition_start_datetime = datetime(2024, 3, 10)
-current_week = get_current_week(competition_start_datetime)
-print(f"Current Competition Week: {current_week}")
+competition_total_weeks = 8 # Standard 8-week competition
+current_week = get_current_competition_week(competition_start_datetime, competition_total_weeks)
+print(f"Current Competition Week Calculated: {current_week}") # Updated print
 
 # --- Load and Preprocess Data ---
 DATA_URL = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx?raw=true"
@@ -335,26 +392,33 @@ if weekly_data is not None and not weekly_data.empty:
 
     selected_participant_sb = sidebar.selectbox("Select a Bourbon Chaser", ["All"] + participants, key="sb_participant")
 
-    # Week selection
-    all_weeks_options = [f"Week {i}" for i in range(1, 9)] # Assuming 8 weeks total
-    all_weeks_options.insert(0, "All Weeks")
-    # Set default week index carefully
+    # --- Week selection (UPDATED DEFAULT) ---
+    all_weeks_options = [f"Week {i}" for i in range(1, competition_total_weeks + 1)] # Use variable
+    all_weeks_options.insert(0, "All Weeks") # Add 'All Weeks' at the beginning
+
+    # Set default week index carefully using the calculated current_week
     default_week_str = f"Week {current_week}"
-    default_week_index = all_weeks_options.index(default_week_str) if default_week_str in all_weeks_options else 0
+    # Find the index of the default week string, default to 0 ('All Weeks') if not found or invalid
+    try:
+        # The index needs to account for 'All Weeks' being at position 0
+        default_week_index = all_weeks_options.index(default_week_str)
+    except ValueError:
+        print(f"Warning: Calculated current week '{default_week_str}' not found in options {all_weeks_options}. Defaulting to 'All Weeks'.")
+        default_week_index = 0 # Default to 'All Weeks' (index 0)
 
-    # Add these debug print statements
-    print(f"Current week calculated: {current_week}")
-    print(f"Default week string: {default_week_str}")
-    print(f"Default week index: {default_week_index}")
-    print(f"All week options: {all_weeks_options}")
-
-    selected_week_str_sb = sidebar.selectbox("Select a Week", all_weeks_options, index=default_week_index, key="sb_week")
+    selected_week_str_sb = sidebar.selectbox(
+        "Select a Week",
+        all_weeks_options,
+        index=default_week_index, # Use the calculated index
+        key="sb_week"
+    )
+    # --- End of Updated Week Selection ---
 
 else:
     sidebar.markdown("_(Data not loaded or is empty, filters unavailable)_")
     # Set defaults if data loading failed
     selected_participant_sb = "All"
-    selected_week_str_sb = "All Weeks"
+    selected_week_str_sb = "All Weeks" # Keep default as All Weeks if data fails
 
 
 # --- Main App Tabs ---
@@ -457,7 +521,7 @@ with tabs[0]:
 
             return leaderboard
 
-        competition_total_weeks = 8 # Standard 8-week competition
+        # competition_total_weeks is defined earlier
         leaderboard_df = calculate_leaderboard(weekly_data.copy(), competition_total_weeks) # Use a copy of the cleaned data
         st.subheader("Strava Competition Leaderboard")
         st.markdown("Overall ranking based on **cumulative points** earned from HR Zones across all activities and weeks. Also shows points behind the leader and a breakdown of points earned each week.")
@@ -575,10 +639,22 @@ with tabs[0]:
                  try:
                      today_date = datetime.today().date(); start_date_dt = competition_start_datetime.date()
                      if today_date >= start_date_dt:
-                         # Calculate date ranges
-                         days_since_start = (today_date - start_date_dt).days; current_week_num_for_calc = (days_since_start // 7) + 1; day_of_current_week = days_since_start % 7
-                         current_week_start_dt = start_date_dt + timedelta(weeks=current_week_num_for_calc - 1); current_period_end_dt = current_week_start_dt + timedelta(days=day_of_current_week)
-                         prev_week_start_dt = current_week_start_dt - timedelta(weeks=1); prev_period_end_dt = prev_week_start_dt + timedelta(days=day_of_current_week)
+                         # Calculate current competition week number based on Mon-Sun cycle
+                         current_week_num_for_calc = get_current_competition_week(start_date_dt, competition_total_weeks)
+                         # Calculate date ranges relative to Mon-Sun weeks
+                         start_weekday = start_date_dt.weekday() # Mon=0, Sun=6
+                         monday_of_start_week = start_date_dt - timedelta(days=start_weekday)
+                         # Monday of the current week
+                         today_weekday = today_date.weekday()
+                         monday_of_current_week = today_date - timedelta(days=today_weekday)
+                         # Calculate start/end dates for current and previous WtD periods
+                         days_into_current_week = (today_date - monday_of_current_week).days
+                         current_period_end_dt = today_date
+                         current_week_start_dt = monday_of_current_week
+                         prev_week_monday = monday_of_current_week - timedelta(weeks=1)
+                         prev_period_end_dt = prev_week_monday + timedelta(days=days_into_current_week)
+                         prev_week_start_dt = prev_week_monday # The start of the previous week is its Monday
+
                          # Sum distances within ranges
                          current_week_distance = running_data_group[ (running_data_group["Date"].dt.date >= current_week_start_dt) & (running_data_group["Date"].dt.date <= current_period_end_dt) ]["Total Distance"].sum()
                          prev_week_distance = running_data_group[ (running_data_group["Date"].dt.date >= prev_week_start_dt) & (running_data_group["Date"].dt.date <= prev_period_end_dt) ]["Total Distance"].sum()
@@ -617,10 +693,18 @@ with tabs[0]:
                  try:
                      today_date = datetime.today().date(); start_date_dt = competition_start_datetime.date()
                      if today_date >= start_date_dt:
-                         # Calculate date ranges (same logic as above)
-                         days_since_start = (today_date - start_date_dt).days; current_week_num_for_calc = (days_since_start // 7) + 1; day_of_current_week = days_since_start % 7
-                         current_week_start_dt = start_date_dt + timedelta(weeks=current_week_num_for_calc - 1); current_period_end_dt = current_week_start_dt + timedelta(days=day_of_current_week)
-                         prev_week_start_dt = current_week_start_dt - timedelta(weeks=1); prev_period_end_dt = prev_week_start_dt + timedelta(days=day_of_current_week)
+                         # Use same date range logic as Running Distance KPI (Mon-Sun weeks)
+                         start_weekday = start_date_dt.weekday()
+                         monday_of_start_week = start_date_dt - timedelta(days=start_weekday)
+                         today_weekday = today_date.weekday()
+                         monday_of_current_week = today_date - timedelta(days=today_weekday)
+                         days_into_current_week = (today_date - monday_of_current_week).days
+                         current_period_end_dt = today_date
+                         current_week_start_dt = monday_of_current_week
+                         prev_week_monday = monday_of_current_week - timedelta(weeks=1)
+                         prev_period_end_dt = prev_week_monday + timedelta(days=days_into_current_week)
+                         prev_week_start_dt = prev_week_monday
+
                          # Count activities within ranges
                          current_week_activity_count = weekly_data_kpi_act[ (weekly_data_kpi_act["Date"].dt.date >= current_week_start_dt) & (weekly_data_kpi_act["Date"].dt.date <= current_period_end_dt) ].shape[0]
                          prev_week_activity_count = weekly_data_kpi_act[ (weekly_data_kpi_act["Date"].dt.date >= prev_week_start_dt) & (weekly_data_kpi_act["Date"].dt.date <= prev_period_end_dt) ].shape[0]
@@ -660,10 +744,18 @@ with tabs[0]:
                   try:
                       today_date = datetime.today().date(); start_date_dt = competition_start_datetime.date()
                       if today_date >= start_date_dt:
-                         # Calculate date ranges
-                         days_since_start = (today_date - start_date_dt).days; current_week_num_for_calc = (days_since_start // 7) + 1; day_of_current_week = days_since_start % 7
-                         current_week_start_dt = start_date_dt + timedelta(weeks=current_week_num_for_calc - 1); current_period_end_dt = current_week_start_dt + timedelta(days=day_of_current_week)
-                         prev_week_start_dt = current_week_start_dt - timedelta(weeks=1); prev_period_end_dt = prev_week_start_dt + timedelta(days=day_of_current_week)
+                         # Use same date range logic as Running Distance KPI (Mon-Sun weeks)
+                         start_weekday = start_date_dt.weekday()
+                         monday_of_start_week = start_date_dt - timedelta(days=start_weekday)
+                         today_weekday = today_date.weekday()
+                         monday_of_current_week = today_date - timedelta(days=today_weekday)
+                         days_into_current_week = (today_date - monday_of_current_week).days
+                         current_period_end_dt = today_date
+                         current_week_start_dt = monday_of_current_week
+                         prev_week_monday = monday_of_current_week - timedelta(weeks=1)
+                         prev_period_end_dt = prev_week_monday + timedelta(days=days_into_current_week)
+                         prev_week_start_dt = prev_week_monday
+
                          # Sum points within ranges
                          current_week_points = weekly_data_kpi_pts[ (weekly_data_kpi_pts["Date"].dt.date >= current_week_start_dt) & (weekly_data_kpi_pts["Date"].dt.date <= current_period_end_dt) ]["Points"].sum()
                          prev_week_points = weekly_data_kpi_pts[ (weekly_data_kpi_pts["Date"].dt.date >= prev_week_start_dt) & (weekly_data_kpi_pts["Date"].dt.date <= prev_period_end_dt) ]["Points"].sum()
@@ -882,7 +974,7 @@ with tabs[2]:
                      try:
                          individual_data['Week'] = pd.to_numeric(individual_data['Week'], errors='coerce')
                          active_weeks = individual_data['Week'].dropna().nunique() # Ensure NaNs are dropped before nunique
-                         total_competition_weeks = 8 # Fixed duration
+                         # total_competition_weeks defined earlier
                          st.metric(label="Active Weeks Logged", value=f"{active_weeks} out of {total_competition_weeks}")
                      except Exception as e:
                          st.error(f"Error calculating consistency metric: {e}")
