@@ -211,20 +211,13 @@ if weekly_data is not None and not weekly_data.empty:
     # Sort by Date first (most recent first), then maybe by Participant if needed
     weekly_data = weekly_data.sort_values(by="Date", ascending=False)
 
-    # Calculate Points
-    zone_cols = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"]
     # Ensure zone columns exist and are numeric, fillna(0) for safety
+    zone_cols = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"]
     for col in zone_cols:
         if col not in weekly_data.columns:
             weekly_data[col] = 0 # Add missing zone columns if necessary
         else:
             weekly_data[col] = pd.to_numeric(weekly_data[col], errors='coerce').fillna(0)
-
-    weekly_data["Points"] = (
-        weekly_data["Zone 1"] * 1 + weekly_data["Zone 2"] * 2 +
-        weekly_data["Zone 3"] * 3 + weekly_data["Zone 4"] * 4 +
-        weekly_data["Zone 5"] * 5
-    )
 
     # Calculate Points (this already adds/updates the 'Points' column, usually at the end)
     weekly_data["Points"] = (
@@ -233,6 +226,7 @@ if weekly_data is not None and not weekly_data.empty:
         weekly_data["Zone 5"] * 5
     )
 
+    # *** CORRECTED BLOCK ***
     # Now, move the 'Points' column if 'Zone 5' exists
     if "Zone 5" in weekly_data.columns and 'Points' in weekly_data.columns:
         zone5_index = weekly_data.columns.get_loc("Zone 5")
@@ -243,6 +237,8 @@ if weekly_data is not None and not weekly_data.empty:
     # else: If 'Zone 5' doesn't exist or 'Points' wasn't calculated for some reason,
     # 'Points' will remain where it was (usually appended at the end by the calculation above),
     # or won't exist if the calculation failed. This logic is fine.
+    # *** END OF CORRECTED BLOCK ***
+
 
     # Make relevant columns numeric, coercing errors
     numeric_cols = ["Total Distance", "Total Duration", "Week"]
@@ -343,7 +339,16 @@ with tabs[0]:
 
         # Format Date for display *just before* showing the dataframe
         if "Date" in filtered_display_data.columns:
-             filtered_display_data["Date"] = filtered_display_data["Date"].dt.strftime("%B %d, %Y")
+             # Make sure Date is datetime before formatting
+             filtered_display_data["Date"] = pd.to_datetime(filtered_display_data["Date"], errors='coerce')
+             # Only format non-NaT values
+             mask = filtered_display_data["Date"].notna()
+             filtered_display_data.loc[mask, "Date_Formatted"] = filtered_display_data.loc[mask, "Date"].dt.strftime("%B %d, %Y")
+             # Use the formatted column, potentially replacing original or keeping both
+             if "Date_Formatted" in filtered_display_data.columns:
+                 filtered_display_data["Date"] = filtered_display_data["Date_Formatted"] # Overwrite original Date column with formatted string for display
+                 # Can remove the helper column: filtered_display_data.drop(columns=["Date_Formatted"], inplace=True)
+
 
         # Select and order columns for display if needed
         display_cols = ["Date", "Participant", "Workout Type", "Total Duration", "Total Distance",
@@ -398,12 +403,13 @@ with tabs[0]:
 
 
         # --- Biggest Mover Highlight ---
-        st.subheader(f"🔥 Biggest Points Mover and Shaker - Week {current_week}")
+        st.subheader(f"🔥 Biggest Points Mover - Week {current_week}")
         st.caption(f"Highlights the participant who earned the most points specifically in Week {current_week}.")
         if current_week > 0 and not leaderboard_df.empty:
             current_week_col = f"Week {current_week} Totals"
             if current_week_col in leaderboard_df.columns:
                  # Find the participant with the max points in the current week's column
+                 # Handle potential ties by taking the first one
                  biggest_mover = leaderboard_df.loc[leaderboard_df[current_week_col].idxmax()]
                  st.success(f"**{biggest_mover['Participant']}** with **{biggest_mover[current_week_col]:.0f} points** earned this week!")
             else:
@@ -476,15 +482,14 @@ with tabs[0]:
                          'Formatted Pace': (melted_data['Metric Label'] == 'Distance (miles)') # Conditionally show pace only for distance
                     }
                     # Use custom hovertemplate for full control (alternative to hover_data)
-                    # hover_template = melted_data['Hover Text'].tolist() # Requires careful matching
+                    # hovertemplate = melted_data['Hover Text'].tolist() # Requires careful matching
                 )
 
                 # Add text labels (Pace on distance, value on duration)
                 fig_runners.update_traces(textposition='auto') # Let Plotly handle placement initially
-                fig_runners.update_traces(
-                    text=melted_data.apply(lambda row: row['Formatted Pace'] if row['Metric Label'] == 'Distance (miles)' else f"{row['Display Value']:.1f} hrs", axis=1),
-                    selector=dict(type='bar') # Apply text to bar traces
-                )
+                # Make text conditional based on metric label
+                text_labels = melted_data.apply(lambda row: row['Formatted Pace'] if row['Metric Label'] == 'Distance (miles)' else f"{row['Display Value']:.1f} hrs", axis=1)
+                fig_runners.update_traces(text=text_labels, selector=dict(type='bar'))
 
 
                 fig_runners.update_layout(
@@ -549,9 +554,10 @@ with tabs[0]:
                  if today_date >= start_date_dt:
                      days_since_start = (today_date - start_date_dt).days
                      current_week_num_for_calc = (days_since_start // 7) + 1
-                     day_of_current_week = days_since_start % 7 # 0=Sunday, 1=Monday... if start is Sunday
+                     day_of_current_week = days_since_start % 7 # 0=Day 1, 1=Day 2... assumes start date is Day 0 of week 1
 
                      current_week_start_dt = start_date_dt + timedelta(weeks=current_week_num_for_calc - 1)
+                     # End date is inclusive up to today
                      current_period_end_dt = current_week_start_dt + timedelta(days=day_of_current_week)
 
                      prev_week_start_dt = current_week_start_dt - timedelta(weeks=1)
@@ -786,7 +792,11 @@ with tabs[2]:
              if 'Total Duration' in individual_data.columns:
                  participant_total_time = individual_data["Total Duration"].sum()
                  # Calculate group average total time robustly
-                 group_avg_total_time = weekly_data.groupby("Participant")["Total Duration"].sum().mean() if not weekly_data.groupby("Participant")["Total Duration"].sum().empty else 0
+                 # Ensure Total Duration is numeric for the group average calculation as well
+                 group_time_data = weekly_data.copy()
+                 group_time_data['Total Duration'] = pd.to_numeric(group_time_data['Total Duration'], errors='coerce').fillna(0)
+                 group_avg_total_time = group_time_data.groupby("Participant")["Total Duration"].sum().mean() if not group_time_data.groupby("Participant")["Total Duration"].sum().empty else 0
+
 
                  if group_avg_total_time > 0:
                      percent_of_group_avg = (participant_total_time / group_avg_total_time) * 100
@@ -816,11 +826,18 @@ with tabs[2]:
              st.subheader(f"{participant_selected_ind}'s Time in Zone vs. Group Average")
              st.markdown("Compares the **total minutes spent in each Heart Rate Zone** by the selected participant against the average minutes spent in those zones by **all participants**.")
              zone_columns = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"]
-             # Check if zone columns exist
-             if all(col in individual_data.columns for col in zone_columns):
+             # Check if zone columns exist in both individual and group data
+             if all(col in individual_data.columns for col in zone_columns) and all(col in weekly_data.columns for col in zone_columns):
                  participant_zones = individual_data[zone_columns].sum()
+
                  # Calculate group average robustly
-                 group_avg_zones = weekly_data.groupby("Participant")[zone_columns].sum().mean() if not weekly_data.groupby("Participant")[zone_columns].sum().empty else pd.Series(0, index=zone_columns)
+                 # Ensure zone columns are numeric before averaging
+                 group_zone_data = weekly_data.copy()
+                 for z_col in zone_columns:
+                      group_zone_data[z_col] = pd.to_numeric(group_zone_data[z_col], errors='coerce').fillna(0)
+
+                 group_avg_zones = group_zone_data.groupby("Participant")[zone_columns].sum().mean() if not group_zone_data.groupby("Participant")[zone_columns].sum().empty else pd.Series(0, index=zone_columns)
+
 
                  zone_comparison_df = pd.DataFrame({
                      "Zone": zone_columns,
@@ -861,7 +878,7 @@ with tabs[2]:
                         ind_cum_points,
                         x="Week",
                         y="Points",
-                        title=f"{participant_selected_ind}'s Cumulative Points Over Time", # Title in layout
+                        #title=f"{participant_selected_ind}'s Cumulative Points Over Time", # Title in layout
                         markers=True,
                         template="plotly_dark",
                         labels={"Points": "Cumulative Points", "Week": "Competition Week"}
@@ -896,6 +913,8 @@ with tabs[2]:
 
                  with col2:
                      st.markdown("##### By Total Duration")
+                     # Ensure duration is numeric before summing
+                     individual_data['Total Duration'] = pd.to_numeric(individual_data['Total Duration'], errors='coerce').fillna(0)
                      activity_duration = individual_data.groupby('Workout Type')['Total Duration'].sum().reset_index()
                      fig_act_dur = px.pie(activity_duration, names='Workout Type', values='Total Duration',
                                          # title='Total Duration by Activity Type (minutes)',
@@ -911,6 +930,8 @@ with tabs[2]:
              st.subheader(f"{participant_selected_ind}'s Consistency")
              st.markdown("Indicates the number of **distinct weeks** the participant has logged at least one activity during the competition period.")
              if 'Week' in individual_data.columns:
+                 # Ensure Week is numeric before nunique
+                 individual_data['Week'] = pd.to_numeric(individual_data['Week'], errors='coerce')
                  active_weeks = individual_data['Week'].nunique()
                  total_competition_weeks = 8 # Or derive from data: weekly_data['Week'].nunique() if reliable
                  st.metric(label="Active Weeks Logged", value=f"{active_weeks} out of {total_competition_weeks}")
@@ -926,7 +947,7 @@ with tabs[2]:
 
 # Optional: Add Footer or other info
 st.markdown("---")
-st.caption("🔥 Bourbon Chasers Strava Inferno | Data sourced from Strava activities | Analysis by [Your Name/Group] 🔥")
+st.caption("🔥 Bourbon Chasers Strava Inferno | Data sourced from Strava activities | Dashboard by Steven Carter 🔥")
 
 # --- END OF FILE app.py ---
 
