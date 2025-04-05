@@ -218,9 +218,9 @@ with tabs[0]:  # Leaderboards tab
             if prev_week_col in leaderboard.columns and current_week_col in leaderboard.columns:
                 # Calculate points gained specifically in the current week
                 leaderboard['Latest Week Gain'] = leaderboard[current_week_col]
-                # Find the biggest mover based on this week's points
+                # Find the biggest mover and shaker based on this week's points
                 biggest_mover = leaderboard.loc[leaderboard['Latest Week Gain'].idxmax()]
-                st.subheader(f"🔥 Biggest Mover Week {current_week}: {biggest_mover['Participant']} ({biggest_mover['Latest Week Gain']:.0f} points)")
+                st.subheader(f"🔥 Biggest Mover and Shaker of the Week {current_week}: {biggest_mover['Participant']} ({biggest_mover['Latest Week Gain']:.0f} points)")
             else:
                 st.info("Previous week data not available to calculate Biggest Mover.") # handles week 1 case
 
@@ -426,7 +426,7 @@ with tabs[0]:  # Leaderboards tab
     fig_group_cum_points = px.line(group_cum_points, x="Week", y="Points", title="Group Cumulative Points Over Time", markers=True, template="plotly_dark")
     st.plotly_chart(fig_group_cum_points, use_container_width=True)
 
-    
+
 with tabs[1]:  # Overview tab
     st.header("Competition Overview")
     st.markdown(
