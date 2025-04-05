@@ -516,6 +516,3 @@ with tabs[2]:  # Individual Analysis Tab
         fig_act_dur.update_traces(textposition='inside', textinfo='percent+label')
         st.plotly_chart(fig_act_dur, use_container_width=True)
 
-    active_weeks = individual_data['Week'].nunique()
-    total_weeks = weekly_data['Week'].max() # Or use the fixed 8 weeks
-    st.metric(label="Active Weeks", value=f"{active_weeks} out of {total_weeks}")
