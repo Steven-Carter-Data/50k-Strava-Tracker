@@ -168,20 +168,30 @@ def preprocess_data(df):
     return processed_df
 
 # --- Competition Date & Week Calculation ---
+# --- Competition Date & Week Calculation ---
 def get_current_week(start_date_dt):
-    """Calculates the current competition week number (1-8)."""
+    """
+    Calculates the current competition week number (1-8) with weeks running Monday-Sunday.
+    Weeks start on Monday and end on Sunday.
+    """
     today = datetime.today().date()
+    
     # Ensure start_date_dt is a date object
     if isinstance(start_date_dt, datetime):
         start_date_dt = start_date_dt.date()
-
+        
+    # If competition hasn't started yet
     if today < start_date_dt:
-        return 1 # Or potentially 0 if you want to indicate it hasn't started
-
+        return 1
+        
+    # Calculate days since start
     days_since_start = (today - start_date_dt).days
+    
+    # Calculate week number (integer division gives complete weeks, add 1 for current week)
     week_number = (days_since_start // 7) + 1
-    competition_duration_weeks = 8 # Fixed duration
-    # Clamp the week number between 1 and the max duration
+    
+    # Ensure week is within competition bounds (1-8)
+    competition_duration_weeks = 8
     return min(max(week_number, 1), competition_duration_weeks)
 
 # Define the competition start date (adjust if necessary)
