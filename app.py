@@ -341,6 +341,13 @@ if weekly_data is not None and not weekly_data.empty:
     # Set default week index carefully
     default_week_str = f"Week {current_week}"
     default_week_index = all_weeks_options.index(default_week_str) if default_week_str in all_weeks_options else 0
+
+    # Add these debug print statements
+    print(f"Current week calculated: {current_week}")
+    print(f"Default week string: {default_week_str}")
+    print(f"Default week index: {default_week_index}")
+    print(f"All week options: {all_weeks_options}")
+
     selected_week_str_sb = sidebar.selectbox("Select a Week", all_weeks_options, index=default_week_index, key="sb_week")
 
 else:
