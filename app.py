@@ -171,9 +171,10 @@ def preprocess_data(df):
 def get_current_competition_week(start_date_dt, total_weeks=8):
     """
     Calculates the current competition week number (1-total_weeks).
-    Assumes competition starts on start_date_dt and weeks run Monday-Sunday.
-    Week 1 includes the start date and runs until the following Sunday.
-    Subsequent weeks run Monday-Sunday.
+    Handles competition starting on Sunday, Mar 10, 2024.
+    Week 1: Sun, Mar 10 -> Sun, Mar 17
+    Week 2: Mon, Mar 18 -> Sun, Mar 24
+    ... subsequent weeks run Monday-Sunday.
     """
     today = datetime.today().date()
 
@@ -185,76 +186,49 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
 
     # If today is before the official start date, default to showing Week 1
     if today < start_date:
-        # print("DEBUG: Today is before the official start date.")
+        # print("DEBUG: Today is before start date.") # Optional debug print
         return 1
 
-    # Find the Monday of the week *containing* the start date
-    start_weekday = start_date.weekday() # Monday is 0, Sunday is 6
-    monday_of_start_week = start_date - timedelta(days=start_weekday)
+    # Define the specific end date for Week 1 based on the known schedule
+    # This handles the irregular start week.
+    try:
+        # Explicitly define the end date of the first week
+        end_of_week_1 = datetime(2024, 3, 17).date()
+    except ValueError:
+        # Fallback if date is invalid (shouldn't happen for fixed date)
+        st.error("Error defining end_of_week_1. Please check the date.")
+        return 1 # Default to week 1 on error
 
-    # Find the Monday of the week *containing* today's date
-    today_weekday = today.weekday()
-    monday_of_current_week = today - timedelta(days=today_weekday)
-
-    # Calculate the difference in weeks between the Monday of the current week
-    # and the Monday of the start week.
-    # Example:
-    # Start = Sun Mar 10. monday_of_start_week = Mon Mar 4.
-    # Today = Mon Mar 11. monday_of_current_week = Mon Mar 11.
-    # diff_days = (Mar 11 - Mar 4).days = 7. week_num = (7 // 7) + 1 = 2? No, this is Week 1.
-    # Today = Sun Mar 10. monday_of_current_week = Mon Mar 4.
-    # diff_days = (Mar 4 - Mar 4).days = 0. week_num = (0 // 7) + 1 = 1. Correct.
-    # Today = Sun Mar 17. monday_of_current_week = Mon Mar 11.
-    # diff_days = (Mar 11 - Mar 4).days = 7. week_num = (7 // 7) + 1 = 2? No, this is Week 1.
-    # Today = Mon Mar 18. monday_of_current_week = Mon Mar 18.
-    # diff_days = (Mar 18 - Mar 4).days = 14. week_num = (14 // 7) + 1 = 3? No, this is Week 2.
-
-    # Let's adjust the anchor point. Week 1 effectively *starts* for calculation purposes
-    # on the Monday of the week the competition begins.
-    # The calculation `(days // 7) + 1` works if the reference point is the start of Week 1.
-
-    # Recalculate based on days since the *actual start date*
-    days_since_actual_start = (today - start_date).days
-
-    # Determine the week number based on the Monday-Sunday structure
-    # Find the date of the first Monday *on or after* the start date
-    if start_weekday == 0: # Start date is a Monday
-        first_monday_ref = start_date
-    else: # Start date is not a Monday, find the *next* Monday
-        first_monday_ref = start_date + timedelta(days = (7 - start_weekday))
-
-    # If today is before the first Monday but on or after start_date, it's Week 1
-    if start_date <= today < first_monday_ref:
-        current_week_number = 1
+    if today <= end_of_week_1:
+        # If today is within Week 1 (inclusive of the end date)
+        # print(f"DEBUG: Today ({today}) <= end_of_week_1 ({end_of_week_1}). Returning Week 1.") # Optional debug print
+        return 1
     else:
-        # If today is on or after the first Monday reference point
-        days_since_first_monday = (today - first_monday_ref).days
-        # Week calculation: Days 0-6 = Week 1 relative to first_monday_ref
-        # This corresponds to Competition Week 2 overall.
-        # So, week number = (days_since_first_monday // 7) + 2
-        # Let's rethink:
-        # If today = Sun Mar 10 -> week 1
-        # If today = Mon Mar 11 -> week 1
-        # If today = Sun Mar 17 -> week 1
-        # If today = Mon Mar 18 -> week 2
-        # If today = Mon Apr 8 -> week 5
+        # If today is after Week 1 ended
+        # Calculate the start of Week 2 (the Monday after end_of_week_1)
+        start_of_week_2 = end_of_week_1 + timedelta(days=1) # Should be Mon, Mar 18
 
-        # Use the Monday of the *current* week and the Monday of the *start* week.
-        diff_in_days = (monday_of_current_week - monday_of_start_week).days
-        current_week_number = (diff_in_days // 7) + 1
+        # Calculate how many full days have passed since the start of Week 2
+        days_since_start_of_week_2 = (today - start_of_week_2).days
 
+        # Calculate the week number:
+        # // 7 gives the number of *full* weeks completed since Week 2 started.
+        # Add 2 (1 for Week 1 which already passed + 1 because //7 is 0-indexed)
+        current_week_number = (days_since_start_of_week_2 // 7) + 2
 
-    # Clamp the week number between 1 and the total duration
-    final_week_number = min(max(current_week_number, 1), total_weeks)
-    # print(f"DEBUG: Start={start_date}, Today={today}, StartMon={monday_of_start_week}, TodayMon={monday_of_current_week}, DiffDays={diff_in_days}, CalcWeek={current_week_number}, FinalWeek={final_week_number}")
-    return final_week_number
+        # print(f"DEBUG: Today={today}, EndW1={end_of_week_1}, StartW2={start_of_week_2}, DaysSinceW2={days_since_start_of_week_2}, CalcWeek={current_week_number}") # Optional debug print
 
+        # Clamp the week number between 1 and the total duration
+        final_week = min(max(current_week_number, 1), total_weeks)
+        # print(f"DEBUG: Clamped Week: {final_week}") # Optional debug print
+        return final_week
 
 # Define the competition start date (adjust if necessary)
 competition_start_datetime = datetime(2024, 3, 10)
 competition_total_weeks = 8 # Standard 8-week competition
+# >>> This line calls the NEW function <<<
 current_week = get_current_competition_week(competition_start_datetime, competition_total_weeks)
-print(f"Current Competition Week Calculated: {current_week}") # Updated print
+print(f"Current Competition Week Calculated: {current_week}")
 
 # --- Load and Preprocess Data ---
 DATA_URL = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx?raw=true"
@@ -392,17 +366,18 @@ if weekly_data is not None and not weekly_data.empty:
 
     selected_participant_sb = sidebar.selectbox("Select a Bourbon Chaser", ["All"] + participants, key="sb_participant")
 
-    # --- Week selection (UPDATED DEFAULT) ---
+    # --- Week selection (Uses Corrected Default) ---
     all_weeks_options = [f"Week {i}" for i in range(1, competition_total_weeks + 1)] # Use variable
     all_weeks_options.insert(0, "All Weeks") # Add 'All Weeks' at the beginning
 
     # Set default week index carefully using the calculated current_week
     default_week_str = f"Week {current_week}"
-    # Find the index of the default week string, default to 0 ('All Weeks') if not found or invalid
+    # Find the index of the default week string in the options list
     try:
-        # The index needs to account for 'All Weeks' being at position 0
+        # The index needs to match the position in the list (accounting for "All Weeks" at index 0)
         default_week_index = all_weeks_options.index(default_week_str)
     except ValueError:
+        # If the calculated week isn't found (e.g., error, or competition ended > 8 weeks ago)
         print(f"Warning: Calculated current week '{default_week_str}' not found in options {all_weeks_options}. Defaulting to 'All Weeks'.")
         default_week_index = 0 # Default to 'All Weeks' (index 0)
 
@@ -412,7 +387,7 @@ if weekly_data is not None and not weekly_data.empty:
         index=default_week_index, # Use the calculated index
         key="sb_week"
     )
-    # --- End of Updated Week Selection ---
+    # --- End of Week Selection ---
 
 else:
     sidebar.markdown("_(Data not loaded or is empty, filters unavailable)_")
