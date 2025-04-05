@@ -220,7 +220,7 @@ with tabs[0]:  # Leaderboards tab
                 leaderboard['Latest Week Gain'] = leaderboard[current_week_col]
                 # Find the biggest mover and shaker based on this week's points
                 biggest_mover = leaderboard.loc[leaderboard['Latest Week Gain'].idxmax()]
-                st.subheader(f"🔥 Biggest Mover and Shaker of the Week {current_week}: {biggest_mover['Participant']} ({biggest_mover['Latest Week Gain']:.0f} points)")
+                st.subheader(f"🔥 Biggest Mover and Shaker of Week {current_week}: {biggest_mover['Participant']} ({biggest_mover['Latest Week Gain']:.0f} points)")
             else:
                 st.info("Previous week data not available to calculate Biggest Mover.") # handles week 1 case
 
