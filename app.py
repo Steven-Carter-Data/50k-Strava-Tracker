@@ -226,23 +226,23 @@ if weekly_data is not None and not weekly_data.empty:
         weekly_data["Zone 5"] * 5
     )
 
-        # Calculate Points (this already adds/updates the 'Points' column, usually at the end)
-            weekly_data["Points"] = (
-                weekly_data["Zone 1"] * 1 + weekly_data["Zone 2"] * 2 +
-                weekly_data["Zone 3"] * 3 + weekly_data["Zone 4"] * 4 +
-                weekly_data["Zone 5"] * 5
-            )
+    # Calculate Points (this already adds/updates the 'Points' column, usually at the end)
+    weekly_data["Points"] = (
+        weekly_data["Zone 1"] * 1 + weekly_data["Zone 2"] * 2 +
+        weekly_data["Zone 3"] * 3 + weekly_data["Zone 4"] * 4 +
+        weekly_data["Zone 5"] * 5
+    )
 
-            # Now, move the 'Points' column if 'Zone 5' exists
-            if "Zone 5" in weekly_data.columns and 'Points' in weekly_data.columns:
-                zone5_index = weekly_data.columns.get_loc("Zone 5")
-                # Pop the 'Points' column data
-                points_col_data = weekly_data.pop('Points')
-                # Insert it at the desired location using the popped data
-                weekly_data.insert(zone5_index + 1, "Points", points_col_data)
-            # else: If 'Zone 5' doesn't exist or 'Points' wasn't calculated for some reason,
-            # 'Points' will remain where it was (usually appended at the end by the calculation above),
-            # or won't exist if the calculation failed. This logic is fine.
+    # Now, move the 'Points' column if 'Zone 5' exists
+    if "Zone 5" in weekly_data.columns and 'Points' in weekly_data.columns:
+        zone5_index = weekly_data.columns.get_loc("Zone 5")
+        # Pop the 'Points' column data
+        points_col_data = weekly_data.pop('Points')
+        # Insert it at the desired location using the popped data
+        weekly_data.insert(zone5_index + 1, "Points", points_col_data)
+    # else: If 'Zone 5' doesn't exist or 'Points' wasn't calculated for some reason,
+    # 'Points' will remain where it was (usually appended at the end by the calculation above),
+    # or won't exist if the calculation failed. This logic is fine.
 
     # Make relevant columns numeric, coercing errors
     numeric_cols = ["Total Distance", "Total Duration", "Week"]
