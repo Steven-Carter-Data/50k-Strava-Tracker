@@ -995,21 +995,21 @@ with tabs[2]:
                      st.warning(f"Cannot create activity breakdown: Missing required columns ({req_cols_act})")
 
 
-                 # --- Consistency Metric ---
-                 st.subheader(f"{participant_selected_ind}'s Consistency")
-                 st.markdown("Indicates the number of **distinct weeks** the participant has logged at least one activity during the competition period.")
-                 if 'Week' in individual_data.columns:
-                     try:
-                         individual_data['Week'] = pd.to_numeric(individual_data['Week'], errors='coerce')
-                         active_weeks = individual_data['Week'].dropna().nunique() # Ensure NaNs are dropped before nunique
-                         # total_competition_weeks defined earlier
-                         st.metric(label="Active Weeks Logged", value=f"{active_weeks} out of {total_competition_weeks}")
-                     except Exception as e:
-                         st.error(f"Error calculating consistency metric: {e}")
-                 else:
-                     st.warning("Cannot calculate consistency: Missing 'Week' column.")
-             else: # individual_data is empty
-                 st.info(f"No data found for participant: {participant_selected_ind}")
+            #      # --- Consistency Metric ---
+            #      st.subheader(f"{participant_selected_ind}'s Consistency")
+            #      st.markdown("Indicates the number of **distinct weeks** the participant has logged at least one activity during the competition period.")
+            #      if 'Week' in individual_data.columns:
+            #          try:
+            #              individual_data['Week'] = pd.to_numeric(individual_data['Week'], errors='coerce')
+            #              active_weeks = individual_data['Week'].dropna().nunique() # Ensure NaNs are dropped before nunique
+            #              # total_competition_weeks defined earlier
+            #              st.metric(label="Active Weeks Logged", value=f"{active_weeks} out of {total_competition_weeks}")
+            #          except Exception as e:
+            #              st.error(f"Error calculating consistency metric: {e}")
+            #      else:
+            #          st.warning("Cannot calculate consistency: Missing 'Week' column.")
+            #  else: # individual_data is empty
+            #      st.info(f"No data found for participant: {participant_selected_ind}")
 
     else: # weekly_data is None, empty, or missing 'Participant' column
          st.warning("Weekly data is unavailable or missing 'Participant' column, cannot display individual analysis.")
