@@ -255,12 +255,38 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
 # Define the competition start date (adjust if necessary)
 competition_start_datetime = datetime(2024, 3, 10)
 competition_total_weeks = 8 # Standard 8-week competition
-current_week = get_current_competition_week(competition_start_datetime, competition_total_weeks)
+
+# Calculate current week based on explicit date ranges
+today_date = datetime.today().date()
+
+# Define date ranges for each week
+week_dates = [
+    (datetime(2024, 3, 10).date(), datetime(2024, 3, 17).date()),  # Week 1
+    (datetime(2024, 3, 18).date(), datetime(2024, 3, 24).date()),  # Week 2
+    (datetime(2024, 3, 25).date(), datetime(2024, 3, 31).date()),  # Week 3
+    (datetime(2024, 4, 1).date(), datetime(2024, 4, 7).date()),    # Week 4
+    (datetime(2024, 4, 8).date(), datetime(2024, 4, 14).date()),   # Week 5
+    (datetime(2024, 4, 15).date(), datetime(2024, 4, 21).date()),  # Week 6
+    (datetime(2024, 4, 22).date(), datetime(2024, 4, 28).date()),  # Week 7
+    (datetime(2024, 4, 29).date(), datetime(2024, 5, 5).date()),   # Week 8
+]
+
+# Find which week contains today's date
+current_week = 1  # Default to Week 1 if before competition start
+for week_num, (start_date, end_date) in enumerate(week_dates, 1):
+    if start_date <= today_date <= end_date:
+        current_week = week_num
+        break
+# If today is after the last week, use the last week
+if today_date > week_dates[-1][1]:
+    current_week = len(week_dates)
+
+print(f"Current Competition Week Calculated by Date Check: {current_week}")
 
 # Check if today is Monday - if so, increment the week
 today = datetime.today()
 is_monday = today.weekday() == 0  # Monday is 0 in Python's weekday() function
-default_display_week = current_week + 1 if is_monday else current_week
+default_display_week = min(current_week + 1 if is_monday else current_week, competition_total_weeks)
 print(f"Current Competition Week: {current_week}, Is Monday: {is_monday}, Default Display Week: {default_display_week}")
 
 # --- Load and Preprocess Data ---
