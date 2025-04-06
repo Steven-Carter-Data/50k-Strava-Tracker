@@ -1029,6 +1029,6 @@ with tabs[2]:
 
 # --- Footer ---
 st.markdown("---")
-st.caption("🔥 Bourbon Chasers Strava Inferno | Data sourced from Strava activities | Dashboard by Steven Carter 🔥")
+st.caption("🔥 Bourbon Chasers Strava Inferno | Data sourced from Strava activities | We Fight, We Suffer, We Survive 🔥")
 
 # --- END OF FILE app.py ---
