@@ -601,7 +601,7 @@ with tabs[0]:
 
                     # Prepare data for Plotly (melt)
                     melted_data = combined_data.melt(
-                        id_vars=["Participant", "Formatted Pace"],
+                        id_vars=["Participant", "Formatted Pace", "Pace (min/mile)"],  # Include the numeric pace
                         value_vars=["Total Distance", "Total Duration"],
                         var_name="Metric", value_name="Value"
                     )
@@ -609,16 +609,23 @@ with tabs[0]:
                     melted_data['Display Value'] = melted_data.apply(lambda row: row['Value'] / 60 if row['Metric'] == 'Total Duration' else row['Value'], axis=1)
                     melted_data['Metric Label'] = melted_data['Metric'].replace({"Total Distance": "Distance (miles)", "Total Duration": "Duration (hours)"})
 
-                    # Create the bar chart
+                    # Create the bar chart - FIXED HOVER DATA
                     fig_runners = px.bar(
                         melted_data, x="Display Value", y="Participant", color="Metric Label", orientation="h",
                         color_discrete_map={"Distance (miles)": "#E25822", "Duration (hours)": "#FFD700"}, template="plotly_dark",
                         hover_name="Participant",
-                        hover_data={ 'Participant': False, 'Metric Label': False, 'Display Value': ':.2f', 'Formatted Pace': (melted_data['Metric Label'] == 'Distance (miles)') }
+                        hover_data={
+                            'Participant': False, 
+                            'Metric Label': True,
+                            'Display Value': ':.2f',
+                            'Pace (min/mile)': (':.2f', melted_data['Metric Label'] == 'Distance (miles)')  # Use numeric pace instead
+                        }
                     )
+                    
                     # Add text labels
                     text_labels = melted_data.apply(lambda row: row['Formatted Pace'] if row['Metric Label'] == 'Distance (miles)' else f"{row['Display Value']:.1f} hrs", axis=1)
                     fig_runners.update_traces(text=text_labels, textposition='auto', selector=dict(type='bar'))
+                    
                     # Update layout
                     fig_runners.update_layout(
                         title=dict(text="Total Running Distance & Duration by Bourbon Chaser", x=0.01, xanchor="left", font=dict(size=20, family='UnifrakturCook, serif', color='#D4AF37')),
