@@ -171,58 +171,29 @@ def preprocess_data(df):
 def get_current_competition_week(start_date_dt, total_weeks=8):
     """
     Calculates the current competition week number (1-total_weeks).
-    Handles competition starting on Sunday, Mar 10, 2024.
+    Handles competition starting on Sunday, Mar 10, 2025.
     Week 1: Sun, Mar 10 -> Sun, Mar 17
     Week 2: Mon, Mar 18 -> Sun, Mar 24
     ... subsequent weeks run Monday-Sunday.
     """
     today = datetime.today().date()
-    
-    # Hard-coded week schedule - explicitly define start and end dates for each week
-    week_dates = [
-        # Week 1 (unusual Sunday start)
-        (datetime(2024, 3, 10).date(), datetime(2024, 3, 17).date()),
-        # Week 2
-        (datetime(2024, 3, 18).date(), datetime(2024, 3, 24).date()),
-        # Week 3
-        (datetime(2024, 3, 25).date(), datetime(2024, 3, 31).date()),
-        # Week 4
-        (datetime(2024, 4, 1).date(), datetime(2024, 4, 7).date()),
-        # Week 5
-        (datetime(2024, 4, 8).date(), datetime(2024, 4, 14).date()),
-        # Week 6
-        (datetime(2024, 4, 15).date(), datetime(2024, 4, 21).date()),
-        # Week 7
-        (datetime(2024, 4, 22).date(), datetime(2024, 4, 28).date()),
-        # Week 8
-        (datetime(2024, 4, 29).date(), datetime(2024, 5, 5).date()),
-    ]
-    
-    # If today is before the competition starts, return Week 1
-    if today < week_dates[0][0]:
-        print(f"DEBUG: Today ({today}) is before competition start date ({week_dates[0][0]}). Returning Week 1.")
+
+    # Ensure start_date is a date object
+    if isinstance(start_date_dt, datetime):
+        start_date = start_date_dt.date()
+    else:
+        start_date = start_date_dt # Assume it's already a date object
+
+    # If today is before the official start date, default to showing Week 1
+    if today < start_date:
+        # print("DEBUG: Today is before start date.") # Optional debug print
         return 1
-    
-    # Check which week contains today
-    for week_num, (start_date, end_date) in enumerate(week_dates, 1):
-        if start_date <= today <= end_date:
-            print(f"DEBUG: Today ({today}) is in Week {week_num} ({start_date} to {end_date})")
-            return week_num
-    
-    # If today is after the last week's end date, return the last week
-    if today > week_dates[-1][1]:
-        print(f"DEBUG: Today ({today}) is after the last week's end date ({week_dates[-1][1]}). Returning Week {len(week_dates)}")
-        return len(week_dates)
-    
-    # This should not happen with the logic above, but just in case
-    print(f"DEBUG: Unexpected case for date {today}. Returning Week 1 as fallback.")
-    return 1
 
     # Define the specific end date for Week 1 based on the known schedule
     # This handles the irregular start week.
     try:
-        # Explicitly define the end date of the first week
-        end_of_week_1 = datetime(2024, 3, 17).date()
+        # Explicitly define the end date of the first week - WITH CORRECTED YEAR
+        end_of_week_1 = datetime(2025, 3, 17).date()
     except ValueError:
         # Fallback if date is invalid (shouldn't happen for fixed date)
         st.error("Error defining end_of_week_1. Please check the date.")
@@ -235,7 +206,7 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
     else:
         # If today is after Week 1 ended
         # Calculate the start of Week 2 (the Monday after end_of_week_1)
-        start_of_week_2 = end_of_week_1 + timedelta(days=1) # Should be Mon, Mar 18
+        start_of_week_2 = end_of_week_1 + timedelta(days=1) # Should be Mon, Mar 18, 2025
 
         # Calculate how many full days have passed since the start of Week 2
         days_since_start_of_week_2 = (today - start_of_week_2).days
@@ -252,23 +223,22 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
         # print(f"DEBUG: Clamped Week: {final_week}") # Optional debug print
         return final_week
 
-# Define the competition start date (adjust if necessary)
-competition_start_datetime = datetime(2024, 3, 10)
-competition_total_weeks = 8 # Standard 8-week competition
+competition_start_datetime = datetime(2025, 3, 10)
+competition_total_weeks = 8
 
 # Calculate current week based on explicit date ranges
 today_date = datetime.today().date()
 
 # Define date ranges for each week
 week_dates = [
-    (datetime(2024, 3, 10).date(), datetime(2024, 3, 17).date()),  # Week 1
-    (datetime(2024, 3, 18).date(), datetime(2024, 3, 24).date()),  # Week 2
-    (datetime(2024, 3, 25).date(), datetime(2024, 3, 31).date()),  # Week 3
-    (datetime(2024, 4, 1).date(), datetime(2024, 4, 7).date()),    # Week 4
-    (datetime(2024, 4, 8).date(), datetime(2024, 4, 14).date()),   # Week 5
-    (datetime(2024, 4, 15).date(), datetime(2024, 4, 21).date()),  # Week 6
-    (datetime(2024, 4, 22).date(), datetime(2024, 4, 28).date()),  # Week 7
-    (datetime(2024, 4, 29).date(), datetime(2024, 5, 5).date()),   # Week 8
+    (datetime(2025, 3, 10).date(), datetime(2025, 3, 17).date()),  # Week 1
+    (datetime(2025, 3, 18).date(), datetime(2025, 3, 24).date()),  # Week 2
+    (datetime(2025, 3, 25).date(), datetime(2025, 3, 31).date()),  # Week 3
+    (datetime(2025, 4, 1).date(), datetime(2025, 4, 7).date()),    # Week 4
+    (datetime(2025, 4, 8).date(), datetime(2025, 4, 14).date()),   # Week 5
+    (datetime(2025, 4, 15).date(), datetime(2025, 4, 21).date()),  # Week 6
+    (datetime(2025, 4, 22).date(), datetime(2025, 4, 28).date()),  # Week 7
+    (datetime(2025, 4, 29).date(), datetime(2025, 5, 5).date()),   # Week 8
 ]
 
 # Find which week contains today's date
@@ -844,7 +814,7 @@ with tabs[1]:
     # Keep your existing markdown description here
     st.markdown("""
         ### **Bourbon Chasers - The Descent into Madness**
-        Welcome to the Inferno! Over the next **8 weeks** (starting March 10th, 2024), you will battle for supremacy using **Heart Rate (HR) Zones** from your activities to earn points.
+        Welcome to the Inferno! Over the next **8 weeks** (starting March 10th, 2025), you will battle for supremacy using **Heart Rate (HR) Zones** from your activities to earn points.
         This scoring method aims to level the playing field across different types of endurance activities.
 
         #### **Scoring System**
