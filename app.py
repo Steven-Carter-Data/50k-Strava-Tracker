@@ -590,10 +590,10 @@ with tabs[0]:
                     combined_data = pd.merge(distance_data, duration_data, on="Participant", how="left") # Keep all participants with distance
 
                     # Calculate Pace safely
-                    combined_data["Pace (min/mile)"] = combined_data.apply(
+                    combined_data["Pace_Value"] = combined_data.apply(
                         lambda row: row["Total Duration"] / row["Total Distance"] if row["Total Distance"] > 0 else 0, axis=1
                     )
-                    combined_data["Formatted Pace"] = combined_data["Pace (min/mile)"].apply(
+                    combined_data["Pace_Text"] = combined_data["Pace_Value"].apply(
                         lambda x: f"{int(x)}:{int((x % 1) * 60):02d} min/mi" if x > 0 else "N/A"
                     )
 
@@ -601,7 +601,7 @@ with tabs[0]:
 
                     # Prepare data for Plotly (melt)
                     melted_data = combined_data.melt(
-                        id_vars=["Participant", "Formatted Pace", "Pace (min/mile)"],  # Include the numeric pace
+                        id_vars=["Participant", "Pace_Text"],
                         value_vars=["Total Distance", "Total Duration"],
                         var_name="Metric", value_name="Value"
                     )
@@ -609,21 +609,33 @@ with tabs[0]:
                     melted_data['Display Value'] = melted_data.apply(lambda row: row['Value'] / 60 if row['Metric'] == 'Total Duration' else row['Value'], axis=1)
                     melted_data['Metric Label'] = melted_data['Metric'].replace({"Total Distance": "Distance (miles)", "Total Duration": "Duration (hours)"})
 
-                    # Create the bar chart - FIXED HOVER DATA
+                    # Create the bar chart - SIMPLIFIED HOVER
                     fig_runners = px.bar(
                         melted_data, x="Display Value", y="Participant", color="Metric Label", orientation="h",
                         color_discrete_map={"Distance (miles)": "#E25822", "Duration (hours)": "#FFD700"}, template="plotly_dark",
-                        hover_name="Participant",
-                        hover_data={
-                            'Participant': False, 
-                            'Metric Label': True,
-                            'Display Value': ':.2f',
-                            'Pace (min/mile)': (':.2f', melted_data['Metric Label'] == 'Distance (miles)')  # Use numeric pace instead
-                        }
+                        hover_name="Participant"  # Just use hover_name, no hover_data
+                    )
+                    
+                    # Add custom hover templates based on metric type
+                    for i, d in enumerate(fig_runners.data):
+                        if "Distance" in d.name:
+                            # Format for distance bars
+                            fig_runners.data[i].hovertemplate = '%{y}<br>Distance: %{x:.2f} miles<br>Pace: %{customdata[0]}<extra></extra>'
+                        else:
+                            # Format for duration bars
+                            fig_runners.data[i].hovertemplate = '%{y}<br>Duration: %{x:.2f} hours<extra></extra>'
+                    
+                    # Add custom data for hover
+                    fig_runners.update_traces(
+                        customdata=melted_data[['Pace_Text']],
+                        selector=dict(type='bar')
                     )
                     
                     # Add text labels
-                    text_labels = melted_data.apply(lambda row: row['Formatted Pace'] if row['Metric Label'] == 'Distance (miles)' else f"{row['Display Value']:.1f} hrs", axis=1)
+                    text_labels = melted_data.apply(
+                        lambda row: row['Pace_Text'] if row['Metric Label'] == 'Distance (miles)' else f"{row['Display Value']:.1f} hrs", 
+                        axis=1
+                    )
                     fig_runners.update_traces(text=text_labels, textposition='auto', selector=dict(type='bar'))
                     
                     # Update layout
