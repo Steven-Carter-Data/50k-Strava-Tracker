@@ -177,17 +177,46 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
     ... subsequent weeks run Monday-Sunday.
     """
     today = datetime.today().date()
-
-    # Ensure start_date is a date object
-    if isinstance(start_date_dt, datetime):
-        start_date = start_date_dt.date()
-    else:
-        start_date = start_date_dt # Assume it's already a date object
-
-    # If today is before the official start date, default to showing Week 1
-    if today < start_date:
-        # print("DEBUG: Today is before start date.") # Optional debug print
+    
+    # Hard-coded week schedule - explicitly define start and end dates for each week
+    week_dates = [
+        # Week 1 (unusual Sunday start)
+        (datetime(2024, 3, 10).date(), datetime(2024, 3, 17).date()),
+        # Week 2
+        (datetime(2024, 3, 18).date(), datetime(2024, 3, 24).date()),
+        # Week 3
+        (datetime(2024, 3, 25).date(), datetime(2024, 3, 31).date()),
+        # Week 4
+        (datetime(2024, 4, 1).date(), datetime(2024, 4, 7).date()),
+        # Week 5
+        (datetime(2024, 4, 8).date(), datetime(2024, 4, 14).date()),
+        # Week 6
+        (datetime(2024, 4, 15).date(), datetime(2024, 4, 21).date()),
+        # Week 7
+        (datetime(2024, 4, 22).date(), datetime(2024, 4, 28).date()),
+        # Week 8
+        (datetime(2024, 4, 29).date(), datetime(2024, 5, 5).date()),
+    ]
+    
+    # If today is before the competition starts, return Week 1
+    if today < week_dates[0][0]:
+        print(f"DEBUG: Today ({today}) is before competition start date ({week_dates[0][0]}). Returning Week 1.")
         return 1
+    
+    # Check which week contains today
+    for week_num, (start_date, end_date) in enumerate(week_dates, 1):
+        if start_date <= today <= end_date:
+            print(f"DEBUG: Today ({today}) is in Week {week_num} ({start_date} to {end_date})")
+            return week_num
+    
+    # If today is after the last week's end date, return the last week
+    if today > week_dates[-1][1]:
+        print(f"DEBUG: Today ({today}) is after the last week's end date ({week_dates[-1][1]}). Returning Week {len(week_dates)}")
+        return len(week_dates)
+    
+    # This should not happen with the logic above, but just in case
+    print(f"DEBUG: Unexpected case for date {today}. Returning Week 1 as fallback.")
+    return 1
 
     # Define the specific end date for Week 1 based on the known schedule
     # This handles the irregular start week.
