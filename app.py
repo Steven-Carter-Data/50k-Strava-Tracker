@@ -550,7 +550,7 @@ with tabs[0]:
 
 
         # --- Biggest Mover Highlight ---
-        st.subheader(f"🔥 Biggest Points Mover - Week {current_week}")
+        st.subheader(f"🔥 Biggest Points Mover & Shaker - Week {current_week}")
         st.caption(f"Highlights the participant who earned the most points specifically in Week {current_week}.")
         if current_week > 0 and not leaderboard_df.empty:
             current_week_col = f"Week {current_week} Totals"
