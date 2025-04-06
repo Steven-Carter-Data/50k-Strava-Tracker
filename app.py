@@ -226,9 +226,13 @@ def get_current_competition_week(start_date_dt, total_weeks=8):
 # Define the competition start date (adjust if necessary)
 competition_start_datetime = datetime(2024, 3, 10)
 competition_total_weeks = 8 # Standard 8-week competition
-# >>> This line calls the NEW function <<<
 current_week = get_current_competition_week(competition_start_datetime, competition_total_weeks)
-print(f"Current Competition Week Calculated: {current_week}")
+
+# Check if today is Monday - if so, increment the week
+today = datetime.today()
+is_monday = today.weekday() == 0  # Monday is 0 in Python's weekday() function
+default_display_week = current_week + 1 if is_monday else current_week
+print(f"Current Competition Week: {current_week}, Is Monday: {is_monday}, Default Display Week: {default_display_week}")
 
 # --- Load and Preprocess Data ---
 DATA_URL = "https://github.com/Steven-Carter-Data/50k-Strava-Tracker/blob/main/TieDye_Weekly_Scoreboard.xlsx?raw=true"
@@ -374,13 +378,14 @@ if weekly_data is not None and not weekly_data.empty:
     print(f"DEBUG: all_weeks_options = {all_weeks_options}") # Check the list contents
 
     # Set default week index carefully using the calculated current_week
-    default_week_str = f"Week {current_week}"
+    default_week_str = f"Week {default_display_week}"
+    print(f"DEBUG: Attempting to find index for default_week_str = '{default_week_str}'")
+
     print(f"DEBUG: Attempting to find index for default_week_str = '{default_week_str}'")
 
     default_week_index = 0 # Initialize with a safe default
     try:
         # Find the index of the default week string in the options list
-        # The index needs to match the position in the list (accounting for "All Weeks" at index 0)
         default_week_index = all_weeks_options.index(default_week_str)
         print(f"DEBUG: Found index = {default_week_index} for '{default_week_str}'")
     except ValueError:
