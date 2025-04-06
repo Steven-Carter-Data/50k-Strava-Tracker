@@ -366,20 +366,34 @@ if weekly_data is not None and not weekly_data.empty:
 
     selected_participant_sb = sidebar.selectbox("Select a Bourbon Chaser", ["All"] + participants, key="sb_participant")
 
-    # --- Week selection (Uses Corrected Default) ---
+    # --- Week selection (Debugging Default) ---
+    print("--- DEBUGGING WEEK SELECTBOX ---") # Marker
     all_weeks_options = [f"Week {i}" for i in range(1, competition_total_weeks + 1)] # Use variable
     all_weeks_options.insert(0, "All Weeks") # Add 'All Weeks' at the beginning
+    print(f"DEBUG: current_week variable value = {current_week}") # Check the variable itself
+    print(f"DEBUG: all_weeks_options = {all_weeks_options}") # Check the list contents
 
     # Set default week index carefully using the calculated current_week
     default_week_str = f"Week {current_week}"
-    # Find the index of the default week string in the options list
+    print(f"DEBUG: Attempting to find index for default_week_str = '{default_week_str}'")
+
+    default_week_index = 0 # Initialize with a safe default
     try:
+        # Find the index of the default week string in the options list
         # The index needs to match the position in the list (accounting for "All Weeks" at index 0)
         default_week_index = all_weeks_options.index(default_week_str)
+        print(f"DEBUG: Found index = {default_week_index} for '{default_week_str}'")
     except ValueError:
-        # If the calculated week isn't found (e.g., error, or competition ended > 8 weeks ago)
-        print(f"Warning: Calculated current week '{default_week_str}' not found in options {all_weeks_options}. Defaulting to 'All Weeks'.")
+        # If the calculated week isn't found
+        print(f"DEBUG: *** ValueError *** - '{default_week_str}' NOT found in options. Defaulting index to 0.")
         default_week_index = 0 # Default to 'All Weeks' (index 0)
+    except Exception as e:
+        # Catch any other unexpected error during index finding
+        print(f"DEBUG: *** Exception *** - Error finding index for '{default_week_str}': {e}. Defaulting index to 0.")
+        default_week_index = 0
+
+    print(f"DEBUG: FINAL default_week_index being passed to selectbox = {default_week_index}")
+    print("--- END DEBUGGING WEEK SELECTBOX ---") # Marker
 
     selected_week_str_sb = sidebar.selectbox(
         "Select a Week",
@@ -394,6 +408,8 @@ else:
     # Set defaults if data loading failed
     selected_participant_sb = "All"
     selected_week_str_sb = "All Weeks" # Keep default as All Weeks if data fails
+    # Add a debug print here too, in case the data load is the issue
+    print("DEBUG: weekly_data is None or empty, filters unavailable.")
 
 
 # --- Main App Tabs ---
